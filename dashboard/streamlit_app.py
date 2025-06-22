@@ -76,8 +76,8 @@ def kpi_color(value, thresholds):
     else:
         return "🔴"
 
-# --- Tabs ---
-tabs = st.tabs([
+# --- Tabs (now in the main content area) ---
+tab_overview, tab_pricing, tab_ab_testing, tab_ml_insights, tab_real_time, tab_geographic = st.tabs([
     "📈 Overview",
     "💰 Pricing Strategy",
     "🧪 A/B Testing",
@@ -86,7 +86,7 @@ tabs = st.tabs([
     "🌍 Geographic"
 ])
 
-with tabs[0]:
+with tab_overview:
     st.subheader("Overview")
     st.markdown("### 📊 Key Metrics")
     col1, col2, col3 = st.columns(3)
@@ -102,8 +102,8 @@ with tabs[0]:
         plans_count = "N/A"
         st.info("No data available for the selected filters in the Overview tab.")
 
-    col1.metric("Avg Elasticity", f"{kpi_color(elasticity_val, [0.5, 1.0])} {elasticity_val}" if elasticity_val != "N/A" else elasticity_val)
-    col2.metric("Conversion Rate", f"{kpi_color(conversion_val, [10, 25])} {conversion_val}%" if conversion_val != "N/A" else conversion_val)
+    col1.metric("Avg Elasticity", f"{kpi_color(elasticity_val, [0.5, 1.0])} {elasticity_val}" if elasticity_val != "N/A" else str(elasticity_val))
+    col2.metric("Conversion Rate", f"{kpi_color(conversion_val, [10, 25])} {conversion_val}%" if conversion_val != "N/A" else str(conversion_val))
     col3.metric("Plans", plans_count)
 
     st.markdown("### 🔄 Funnel Analysis")
@@ -123,7 +123,7 @@ with tabs[0]:
     st.markdown("### 🔍 Filtered Raw Data")
     st.dataframe(df_filtered)
 
-with tabs[1]:
+with tab_pricing:
     st.subheader("Pricing Strategy")
     st.markdown("### 📈 Elasticity by Plan")
     if not df_filtered.empty:
@@ -132,7 +132,7 @@ with tabs[1]:
     else:
         st.info("No data available for the selected filters to display Elasticity by Plan.")
 
-with tabs[2]:
+with tab_ab_testing:
     st.subheader("A/B Testing")
     st.markdown("### 🧪 Simulated Conversion Rates by Region")
     if not df_filtered.empty:
@@ -141,7 +141,7 @@ with tabs[2]:
     else:
         st.info("No data available for the selected filters to display Simulated Conversion Rates by Region.")
 
-with tabs[3]:
+with tab_ml_insights:
     st.subheader("Retention & Revenue Insights")
     st.markdown("### 🔮 SHAP Model Interpretability")
 
@@ -213,11 +213,11 @@ with tabs[3]:
     render_shap_section("LTV Model", "ltv_model.pkl")
     render_shap_section("Elasticity Model", "elasticity_model.pkl")
 
-with tabs[4]:
+with tab_real_time:
     st.subheader("Real-Time Monitoring")
     st.write("⚙️ Simulated real-time metrics, session trends, and funnel completion.")
 
-with tabs[5]:
+with tab_geographic:
     st.subheader("Geographic Insights")
     st.markdown("### 🌍 Regional Conversion Map (Simulated)")
     if not df_filtered.empty:
