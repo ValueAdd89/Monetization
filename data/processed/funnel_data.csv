@@ -1,6 +1,8 @@
-step,count
-Visited Site,10000
-Signed Up,4500
-Started Trial,3000
-Converted,1200
-Retained (90d),800
+step,step_order,count,conversion_rate
+Visited Landing Page,1,10000,1.0
+Signed Up,2,2500,0.25
+Started Trial,3,2000,0.8
+Used Core Feature,4,1400,0.7
+Added Payment Method,5,630,0.45
+Converted to Paid,6,536,0.85
+Active After 30 Days,7,482,0.9
