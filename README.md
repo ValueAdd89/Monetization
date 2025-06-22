@@ -1,480 +1,659 @@
-📊 Monetization Hub
+# 📊 Telemetry Monetization Dashboard
 
-A comprehensive B2B SaaS monetization analytics platform demonstrating advanced telemetry monitoring, real-time performance tracking, and executive decision support capabilities.
+> **A comprehensive real-time telemetry monetization analytics platform** demonstrating end-to-end data visualization, pricing optimization, and business intelligence capabilities.
 
 <div align="center">
-🚀 Getting Started • 📊 Usage • 🛠️ Tech Stack • 💼 Features • 🤝 Contributing
-Show Image
-Show Image
-Show Image
-Show Image
+
+[🚀 Getting Started](#-getting-started) • [📊 Usage](#-usage) • [🛠️ Tech Stack](#️-technology-stack) • [📈 Features](#-dashboard-features) • [🤝 Contributing](#-contributing)
+
+[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?style=flat&logo=streamlit&logoColor=white)](https://streamlit.io)
+[![Plotly](https://img.shields.io/badge/Plotly-Interactive_Charts-3F4F75?style=flat&logo=plotly&logoColor=white)](https://plotly.com)
+[![ML](https://img.shields.io/badge/Machine_Learning-SHAP_Insights-FF6B35?style=flat&logo=python&logoColor=white)](https://shap.readthedocs.io)
+
 </div>
 
-🎯 Project Overview
-This project showcases a production-grade monetization analytics dashboard for telemetry data, featuring real-time monitoring, conversion funnel analysis, pricing optimization, A/B testing frameworks, and machine learning insights with SHAP explainability.
-Challenge: SaaS companies need comprehensive telemetry monitoring to optimize monetization across multiple touchpoints, from user acquisition to retention and expansion.
-Solution: Interactive analytics platform with real-time KPIs, predictive modeling, pricing elasticity analysis, and executive reporting for data-driven revenue optimization.
-Impact: Demonstrates advanced analytics capabilities with ML-powered insights, comprehensive A/B testing framework, and geographic intelligence for strategic decision-making.
-📋 Executive Documentation
-DocumentPurposeAudience📈 Pricing Strategy ProposalComprehensive pricing optimization with revenue opportunitiesProduct Leadership, CFO, CRO🎯 Executive PresentationSlide-style strategic briefing with key findingsBoard, Executives, Stakeholders📊 Live DashboardInteractive telemetry analytics platformAnalysts, Product Managers
+---
 
-✨ Features
+## 🎯 Project Overview
+
+This project delivers a production-grade telemetry monetization analytics dashboard featuring real-time monitoring, pricing elasticity analysis, A/B testing insights, machine learning predictions, and comprehensive business intelligence across multiple geographic regions.
+
+**Challenge**: SaaS companies need unified analytics to understand real-time performance, optimize pricing strategies, track conversion funnels, and leverage ML insights for customer retention and revenue growth.
+
+**Solution**: Integrated dashboard providing real-time telemetry monitoring, pricing optimization, funnel analysis, A/B testing results, ML-powered churn prediction, and geographic intelligence.
+
+**Impact**: Comprehensive analytics platform enabling data-driven decisions for **conversion optimization**, **pricing strategies**, and **customer lifetime value maximization**.
+
+## 📋 Dashboard Documentation
+
+| Component | Purpose | Target Users |
+|-----------|---------|--------------|
+| **[📈 Overview Dashboard](#-overview-tab)** | High-level KPIs and business metrics | Executives, Product Leadership |
+| **[📊 Real-Time Monitoring](#-real-time-monitoring)** | Live performance tracking and system health | DevOps, Operations Teams |
+| **[🔄 Funnel Analysis](#-funnel-analysis)** | Conversion optimization and user journey insights | Growth Teams, Product Managers |
+| **[💰 Pricing Strategy](#-pricing-strategy)** | Elasticity analysis and ARPU optimization | Revenue Teams, Finance |
+| **[🧪 A/B Testing](#-ab-testing)** | Experiment results with statistical significance | Data Scientists, Growth Teams |
+| **[🤖 ML Insights](#-ml-insights)** | Churn prediction and LTV modeling with SHAP | Data Science, Customer Success |
+| **[🌍 Geographic Intelligence](#-geographic-intelligence)** | Regional performance and global analytics | International Teams, Strategy |
+
+---
+
+## ✨ Features
+
 <div align="center">
-🎯 Core Capabilities
+
+### 🎯 Core Capabilities
+
 </div>
+
 <table>
 <tr>
 <td width="33%">
-📊 Real-Time Telemetry Monitoring
 
-Live Performance Tracking with session monitoring
-Conversion Rate Analysis across funnel stages
-Error Rate Monitoring with alerting thresholds
-Geographic Intelligence with global distribution maps
-A/B Testing Framework with statistical significance
-
-</td>
-<td width="33%">
-🎛️ Interactive Dashboard Suite
-
-Executive Overview with KPI scorecards
-Pricing Strategy Analysis with elasticity modeling
-Funnel Optimization with drop-off identification
-ML Insights with SHAP explanations
-Real-Time Alerts with threshold monitoring
+#### 📊 **Real-Time Analytics Engine**
+- **Live Performance Monitoring** with 30-point time series
+- **Conversion Rate Tracking** with real-time calculations
+- **Error Rate Monitoring** with system health indicators
+- **Session Analytics** with active user tracking
+- **KPI Dashboard** with color-coded performance indicators
 
 </td>
 <td width="33%">
-🔧 Advanced Analytics Engine
 
-Predictive Modeling for churn and LTV
-Price Elasticity Simulation across multiple scenarios
-Customer Segmentation with behavioral analysis
-Statistical Testing with Bayesian and Frequentist methods
-Explainable AI with SHAP visualizations
+#### 🎛️ **Advanced Business Intelligence**
+- **Pricing Elasticity Analysis** with plan-based segmentation
+- **Funnel Optimization** with drop-off identification
+- **A/B Testing Framework** with statistical significance testing
+- **Geographic Intelligence** with US and global views
+- **Executive Reporting** with trend analysis and benchmarks
+
+</td>
+<td width="33%">
+
+#### 🤖 **Machine Learning Integration**
+- **Churn Prediction Models** with probability scoring
+- **Lifetime Value (LTV) Prediction** with feature importance
+- **SHAP Explainability** with force plots and waterfall charts
+- **Model Version Control** with performance tracking
+- **Interactive ML Insights** with real-time explanations
 
 </td>
 </tr>
 </table>
-🎨 Dashboard Features
-<details>
-<summary><b>📈 Overview Dashboard</b></summary>
 
-Key Performance Indicators with traffic light scoring
-Monthly Recurring Revenue tracking and projections
-Churn Rate Analysis with historical trends
-Customer Metrics with conversion and retention insights
-Executive Summary with actionable insights
+### 🎨 Dashboard Features
+
+<details>
+<summary><b>📈 Overview Tab</b></summary>
+
+- **Key Metrics Display**: Elasticity, conversion rates, and plan metrics
+- **MRR Tracking**: Monthly recurring revenue with trend analysis
+- **Churn Rate Monitoring**: Customer retention performance over time
+- **Data Integration**: Real-time filtering with pricing elasticity data
+- **Executive KPIs**: Color-coded performance indicators with thresholds
 
 </details>
+
 <details>
 <summary><b>📊 Real-Time Monitoring</b></summary>
 
-Live Session Tracking with current user counts
-Conversion Rate Monitoring with real-time calculations
-Error Rate Dashboard with system health indicators
-Performance Trends with 30-minute rolling windows
-Alert Thresholds with automated notifications
+- **Live Session Tracking**: Active user monitoring with 5-minute intervals
+- **Conversion Monitoring**: Real-time conversion rate calculations
+- **System Health**: Error rate tracking with visual alerts
+- **Performance Metrics**: Current snapshot KPIs with trend indicators
+- **Time Series Visualization**: Interactive charts with hover details
 
 </details>
+
 <details>
 <summary><b>🔄 Funnel Analysis</b></summary>
 
-Multi-Stage Conversion Tracking from visitor to paid customer
-Drop-off Identification with optimization opportunities
-Regional Performance comparison across markets
-Plan-Based Analysis with tier-specific insights
-Time-Series Trending for funnel performance
+- **User Journey Mapping**: Complete funnel from visitor to paid customer
+- **Drop-off Analysis**: Identification of conversion bottlenecks
+- **Dynamic Filtering**: Plan, region, and year-based segmentation
+- **Conversion Optimization**: Visual funnel charts with step-by-step metrics
+- **Performance Benchmarking**: Historical comparison and trend analysis
 
 </details>
+
 <details>
 <summary><b>💰 Pricing Strategy</b></summary>
 
-Price Elasticity Modeling with demand curve visualization
-Revenue Distribution by plan and customer segment
-Competitive Positioning with market benchmarks
-ARPU Analysis across different customer tiers
-Optimization Recommendations with ROI projections
+- **ARPU Analysis**: Average revenue per user by plan tier
+- **User Distribution**: Customer segmentation across pricing plans
+- **Elasticity Insights**: Price sensitivity analysis from main data
+- **Revenue Optimization**: Strategic pricing recommendations
+- **Plan Performance**: Comparative analysis across subscription tiers
 
 </details>
+
 <details>
-<summary><b>🧪 A/B Testing Framework</b></summary>
+<summary><b>🧪 A/B Testing</b></summary>
 
-Experiment Management with multiple test scenarios
-Statistical Significance testing with Frequentist and Bayesian methods
-Power Analysis with sample size calculations
-Conversion Rate Comparison with lift measurements
-Confidence Intervals with risk assessment
+- **Experiment Selection**: Multiple test scenarios (button color, onboarding, CTA)
+- **Statistical Methods**: Frequentist and Bayesian analysis options
+- **Significance Testing**: P-value calculations and confidence intervals
+- **Bayesian Inference**: Probability distributions and credible intervals
+- **Power Analysis**: Sample size calculator with effect size estimation
+- **Conversion Comparison**: Visual lift analysis with key metrics
 
 </details>
+
 <details>
 <summary><b>🤖 ML Insights</b></summary>
 
-Churn Prediction Models with risk scoring
-Lifetime Value Estimation with customer segmentation
-SHAP Explanations for model interpretability
-Feature Importance analysis with business context
-Model Performance Tracking with version control
+- **Churn Prediction**: Customer risk scoring with SHAP feature importance
+- **LTV Modeling**: Lifetime value predictions with explanatory features
+- **Model Versioning**: Version control with performance metrics (v1.0, v1.1, v2.0)
+- **SHAP Visualizations**: Force plots, waterfall charts, and decision plots
+- **Performance Metrics**: Accuracy, AUC-ROC, RMSE, and R² tracking
+- **Feature Importance**: Top predictive factors for each customer
 
 </details>
+
 <details>
 <summary><b>🌍 Geographic Intelligence</b></summary>
 
-Global Customer Distribution with interactive maps
-Regional Performance Metrics with local insights
-Market Penetration Analysis with growth opportunities
-Geographic Filtering with real-time updates
-Expansion Planning with market assessment
+- **Dual View Options**: US localized and global regional analysis
+- **Interactive Maps**: Scatter mapbox with size and color encoding
+- **City-Level Analysis**: US metropolitan area performance tracking
+- **Global Regional View**: International performance with conversion mapping
+- **Dynamic Filtering**: Region and plan-based geographic segmentation
 
 </details>
 
-🛠️ Technology Stack
-<div align="center">
-mermaidgraph LR
-    A[CSV Data] --> B[Pandas Processing]
-    B --> C[Streamlit Dashboard]
-    C --> D[Plotly Visualizations]
-    C --> E[SHAP ML Insights]
-    F[Real-Time Simulation] --> C
-    D --> G[Executive Reports]
-    E --> H[Predictive Models]
-</div>
-ComponentTechnologyPurposeFrontendStreamlitInteractive web application and dashboardData ProcessingPandas, NumPyData manipulation and analysisVisualizationsPlotlyInteractive charts and geographic mapsMachine LearningSHAP, scikit-learnModel explainability and predictionsStatistical AnalysisSciPyA/B testing and statistical significanceStylingCSS, HTMLCustom dashboard appearance
+---
 
-🚀 Getting Started
-⚡ Quick Launch (2 minutes)
+## 🛠️ Technology Stack
+
+<div align="center">
+
+```mermaid
+graph LR
+    A[CSV Data] --> B[Pandas Processing]
+    B --> C[Plotly Visualizations]
+    C --> D[Streamlit Dashboard]
+    E[SHAP Models] --> F[ML Insights]
+    F --> D
+    G[Real-time Simulation] --> D
+    D --> H[Interactive Analytics]
+```
+
+</div>
+
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| **Frontend Framework** | Streamlit | Interactive web application with real-time updates |
+| **Data Visualization** | Plotly Express/Graph Objects | Interactive charts, maps, and statistical plots |
+| **Data Processing** | Pandas, NumPy | Data manipulation and statistical calculations |
+| **Machine Learning** | SHAP, Scikit-learn | Model explainability and predictive analytics |
+| **Statistical Analysis** | SciPy | A/B testing significance and Bayesian inference |
+| **Geospatial Analytics** | Plotly Mapbox | Interactive geographic visualizations |
+| **Styling** | Custom CSS | Modern UI with card layouts and responsive design |
+
+---
+
+## 🚀 Getting Started
+
+### ⚡ Quick Launch (3 minutes)
+
 <details>
 <summary><b>🔧 Prerequisites</b></summary>
 
-Python 3.8+ installed
-Git (for cloning)
-1GB RAM minimum
-Modern web browser
+- Python 3.8+ installed
+- Git (for cloning)
+- 4GB RAM minimum
+- Modern web browser (Chrome, Firefox, Safari)
+- Internet connection (for Mapbox visualizations)
 
 </details>
-1️⃣ Clone & Install
-bash# Clone the repository
-git clone https://github.com/your-username/monetization-hub.git
-cd monetization-hub
+
+#### 1️⃣ **Clone & Setup**
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/telemetry-monetization-dashboard.git
+cd telemetry-monetization-dashboard
 
 # Create virtual environment (recommended)
 python -m venv venv
 source venv/bin/activate  # macOS/Linux
 # OR
 venv\Scripts\activate     # Windows
+```
 
-# Install dependencies
+#### 2️⃣ **Install Dependencies**
+
+```bash
+# Install required packages
 pip install streamlit pandas plotly shap matplotlib numpy scipy joblib
-2️⃣ Launch Dashboard
-bash# Start the Streamlit application
+
+# Or install from requirements file if available
+pip install -r requirements.txt
+```
+
+#### 3️⃣ **Prepare Data Structure**
+
+```bash
+# Create data directory structure
+mkdir -p data/processed
+
+# Add your data files to the data/processed directory:
+# - pricing_elasticity.csv
+# - funnel_data.csv
+```
+
+#### 4️⃣ **Launch Dashboard**
+
+```bash
+# Start the Streamlit application
 streamlit run streamlit_app.py
 
 # Dashboard will open automatically at:
 # 🌐 http://localhost:8501
-3️⃣ Explore Analytics
+```
+
+#### 5️⃣ **Explore Analytics**
+
 <div align="center">
-TabDescription📈 OverviewExecutive KPIs and business metrics📊 Real-Time MonitoringLive telemetry and performance tracking🔄 Funnel AnalysisConversion optimization and drop-off analysis💰 Pricing StrategyElasticity modeling and revenue optimization🧪 A/B TestingStatistical testing and experiment management🤖 ML InsightsPredictive modeling with explainable AI🌍 GeographicGlobal distribution and market intelligence
+
+| Tab | Key Features |
+|-----|-------------|
+| **📈 Overview** | Executive KPIs, MRR trends, churn analysis |
+| **📊 Real-Time** | Live monitoring, session tracking, error rates |
+| **🔄 Funnel** | Conversion analysis, drop-off identification |
+| **💰 Pricing** | ARPU analysis, elasticity insights |
+| **🧪 A/B Testing** | Experiment results, statistical significance |
+| **🤖 ML Insights** | Churn prediction, LTV modeling, SHAP explanations |
+| **🌍 Geographic** | Global and US regional performance mapping |
+
 </div>
-🔧 Alternative Data Sources
+
+### 🔧 Advanced Configuration
+
 <details>
-<summary><b>Using Your Own Data</b></summary>
-The dashboard expects CSV files in the data/processed/ directory:
-Required Files:
+<summary><b>Data File Requirements</b></summary>
 
-pricing_elasticity.csv - Price sensitivity data
-funnel_data.csv - Conversion funnel metrics
+**Required CSV Structure:**
 
-Expected Schema:
-python# pricing_elasticity.csv
-columns = ['plan', 'region', 'year', 'elasticity', 'conversion_rate']
+`data/processed/pricing_elasticity.csv`:
+```csv
+plan,region,year,elasticity,conversion_rate
+Basic,North America,2024,0.8,0.15
+Pro,Europe,2024,1.2,0.22
+Enterprise,APAC,2024,0.6,0.35
+```
 
-# funnel_data.csv  
-columns = ['step', 'count', 'step_order', 'plan', 'region', 'year']
-Sample Data Generation:
-pythonimport pandas as pd
-import numpy as np
+`data/processed/funnel_data.csv`:
+```csv
+step,count,step_order,region,plan,year
+Visitor,10000,1,North America,Basic,2024
+Signup,3000,2,North America,Basic,2024
+Trial,1500,3,North America,Basic,2024
+Paid,450,4,North America,Basic,2024
+```
 
-# Generate sample pricing data
-pricing_data = pd.DataFrame({
-    'plan': np.random.choice(['Basic', 'Pro', 'Enterprise'], 1000),
-    'region': np.random.choice(['North America', 'Europe', 'APAC'], 1000),
-    'year': np.random.choice([2021, 2022, 2023, 2024], 1000),
-    'elasticity': np.random.uniform(-2, 0, 1000),
-    'conversion_rate': np.random.uniform(0.05, 0.25, 1000)
-})
-pricing_data.to_csv('data/processed/pricing_elasticity.csv', index=False)
 </details>
 
-📊 Usage
-🎨 Dashboard Screenshots
+<details>
+<summary><b>Customization Options</b></summary>
+
+**Global Filters:**
+- Modify sidebar filters in the script to match your data schema
+- Add new regions, plans, or time periods
+- Customize KPI thresholds and color coding
+
+**Styling:**
+- Update CSS in the `st.markdown()` section for custom branding
+- Modify color schemes in Plotly charts
+- Adjust layout spacing and container styling
+
+**ML Models:**
+- Replace SHAP simulation with real model loading using `joblib`
+- Connect to your trained models for churn and LTV prediction
+- Customize feature names and model performance metrics
+
+</details>
+
+<details>
+<summary><b>Performance Optimization</b></summary>
+
+```python
+# Add caching decorators for better performance
+@st.cache_data
+def load_large_datasets():
+    # Your data loading logic
+    return data
+
+# Optimize filtering operations
+@st.cache_data
+def filter_data(df, filters):
+    # Cached filtering logic
+    return filtered_df
+```
+
+</details>
+
+---
+
+## 📊 Usage
+
+### 🎨 Dashboard Navigation
+
 <div align="center">
-Main Dashboard Overview
-Show Image
-Real-Time Monitoring
-Show Image
-ML Insights with SHAP
-Show Image
+
+**Main Navigation Tabs**
+
+| Tab | Primary Use Case | Key Insights |
+|-----|------------------|--------------|
+| **Overview** | Executive reporting and high-level KPIs | Business health, trends, performance summary |
+| **Real-Time** | Operations monitoring and system health | Live performance, conversion tracking, error monitoring |
+| **Funnel** | Growth optimization and conversion analysis | User journey, drop-off points, optimization opportunities |
+| **Pricing** | Revenue strategy and pricing optimization | ARPU trends, elasticity analysis, plan performance |
+| **A/B Testing** | Experiment validation and statistical analysis | Test results, significance testing, lift calculation |
+| **ML Insights** | Predictive analytics and customer intelligence | Churn risk, LTV prediction, feature importance |
+| **Geographic** | Regional performance and market analysis | Global trends, regional conversion, geographic opportunities |
+
 </div>
-📈 Key Analytics Views
 
-Executive Overview: High-level KPIs with traffic light indicators
-Real-Time Telemetry: Live monitoring with current session tracking
-Conversion Funnels: Stage-by-stage optimization opportunities
-Pricing Analysis: Elasticity curves and competitive positioning
-A/B Testing: Statistical significance and experiment management
-ML Predictions: Churn and LTV models with explainable insights
-Geographic Intelligence: Global market distribution and opportunities
+### 📈 Key Analytics Workflows
 
-🌐 Cloud Deployment
-Streamlit Cloud (Recommended)
+<details>
+<summary><b>🎯 Executive Reporting Workflow</b></summary>
 
-Push to GitHub (public or connected repository)
-Deploy at streamlit.io/cloud
-Set app path to streamlit_app.py
-Launch at https://your-app-name.streamlit.app
+1. **Start with Overview Tab**: Review key metrics and business health
+2. **Check Real-Time Monitoring**: Assess current performance and system status
+3. **Analyze Geographic Performance**: Understand regional variations and opportunities
+4. **Review ML Insights**: Identify at-risk customers and high-value prospects
+5. **Export Key Findings**: Use insights for strategic decision-making
 
-Alternative Options: Heroku, AWS EC2, Google Cloud Run, Azure Container Instances
+</details>
 
-💼 Features
+<details>
+<summary><b>📊 Growth Optimization Workflow</b></summary>
+
+1. **Funnel Analysis**: Identify conversion bottlenecks and drop-off points
+2. **A/B Testing Review**: Validate experiment results and statistical significance
+3. **Pricing Strategy**: Analyze ARPU and elasticity for optimization opportunities
+4. **Geographic Targeting**: Focus on high-performing regions and expansion opportunities
+5. **ML-Driven Insights**: Use churn prediction for proactive customer success
+
+</details>
+
+<details>
+<summary><b>🔧 Technical Monitoring Workflow</b></summary>
+
+1. **Real-Time Dashboard**: Monitor live sessions, conversions, and error rates
+2. **Performance Alerts**: Check KPI color indicators for threshold breaches
+3. **Historical Trends**: Analyze time series data for pattern identification
+4. **System Health**: Review error rates and performance metrics
+5. **Data Quality**: Validate funnel consistency and data integrity
+
+</details>
+
+### 🌐 Global Filtering System
+
+The dashboard features a comprehensive filtering system accessible via the sidebar:
+
+- **Pricing Plan Filter**: All, Basic, Pro, Enterprise
+- **Region Filter**: All, North America, Europe, APAC, LATAM  
+- **Year Slider**: 2021-2024 range selection
+- **Real-time Updates**: All visualizations update dynamically with filter changes
+
+---
+
+## 📈 Business Impact & Analytics
+
 <div align="center">
-🎯 Advanced Analytics Capabilities
-Feature CategoryCapabilitiesBusiness ValueReal-Time MonitoringLive sessions, conversions, errorsImmediate issue detectionFunnel AnalysisDrop-off identification, optimizationConversion rate improvementPricing StrategyElasticity modeling, competitive analysisRevenue optimizationA/B TestingStatistical significance, power analysisData-driven decisionsML InsightsChurn prediction, LTV modelingPredictive intelligenceGeographic AnalysisGlobal distribution, market intelligenceExpansion planning
+
+### 💼 Key Metrics Tracked
+
+| Metric Category | Key Indicators | Business Value |
+|-----------------|----------------|----------------|
+| **Revenue Analytics** | MRR, ARPU, Conversion Rates | Revenue optimization and growth tracking |
+| **Customer Intelligence** | Churn prediction, LTV, Retention | Customer success and lifetime value maximization |
+| **Operational Excellence** | Real-time sessions, Error rates, System health | Performance monitoring and reliability |
+| **Growth Optimization** | Funnel analysis, A/B testing, Geographic performance | Conversion optimization and market expansion |
+
+### 🎯 Business Outcomes
+
+| Capability | Impact Area | Value Delivered |
+|------------|-------------|-----------------|
+| **Real-Time Monitoring** | Operational efficiency | Immediate issue detection and response |
+| **Pricing Optimization** | Revenue growth | Data-driven pricing strategy development |
+| **Churn Prediction** | Customer retention | Proactive customer success interventions |
+| **Geographic Intelligence** | Market expansion | Regional performance optimization |
+| **A/B Testing Framework** | Product optimization | Evidence-based feature and design decisions |
+
 </div>
-📊 Dashboard Components
-<details>
-<summary><b>🚦 KPI Scoring System</b></summary>
-Traffic Light Indicators
 
-🟢 Green: Performance above target thresholds
-🟡 Yellow: Performance within acceptable range
-🔴 Red: Performance below minimum thresholds
+---
 
-Configurable Thresholds
-pythondef kpi_color(value, thresholds):
-    if value >= thresholds[1]:  # Excellent
-        return "🟢"
-    elif value >= thresholds[0]:  # Good
-        return "🟡"
-    else:  # Needs attention
-        return "🔴"
-</details>
-<details>
-<summary><b>📈 Real-Time Simulation</b></summary>
-Live Data Generation
+## 📁 Project Structure
 
-Session Tracking: Simulated user activity with realistic patterns
-Conversion Monitoring: Real-time conversion rate calculations
-Error Rate Tracking: System health monitoring with alerting
-Time-Series Data: 30-minute rolling windows for trend analysis
-
-Performance Metrics
-
-Active sessions with realistic fluctuations
-Conversion rates with business hour patterns
-Error rates with normal operational variance
-Response time monitoring (simulated)
-
-</details>
-<details>
-<summary><b>🤖 Machine Learning Pipeline</b></summary>
-Predictive Models
-
-Churn Prediction: Risk scoring with 87.2% accuracy
-Lifetime Value: Customer value estimation with R² 0.76
-Feature Engineering: Behavioral pattern analysis
-Model Versioning: Track performance across model iterations
-
-Explainable AI with SHAP
-
-Force Plots: Individual prediction explanations
-Waterfall Charts: Feature contribution breakdown
-Decision Plots: Multi-sample comparison analysis
-Feature Importance: Global model behavior insights
-
-</details>
-
-📁 Project Structure
-monetization-hub/
-├── 📊 streamlit_app.py          # Main dashboard application
+```
+telemetry-monetization-dashboard/
+├── 📊 streamlit_app.py               # Main dashboard application
 ├── 📈 data/
 │   └── processed/
-│       ├── pricing_elasticity.csv    # Price sensitivity data
-│       └── funnel_data.csv           # Conversion funnel metrics
-├── 📋 docs/
-│   ├── Pricing_Proposal.md          # Strategic pricing recommendations
-│   └── Strategy_Presentation.md     # Executive strategy briefing
-├── 🎨 static/
-│   └── styles.css                   # Custom dashboard styling
-├── 📝 requirements.txt              # Python dependencies
-└── 📜 README.md                     # This file
+│       ├── pricing_elasticity.csv   # Price sensitivity data
+│       └── funnel_data.csv          # Conversion funnel metrics
+├── 📋 requirements.txt               # Python dependencies
+├── 📚 docs/
+│   ├── data_dictionary.md           # Data schema documentation
+│   ├── user_guide.md               # Dashboard usage guide
+│   └── technical_specs.md          # Technical implementation details
+├── 🔧 config/
+│   ├── dashboard_config.py         # Configuration settings
+│   └── styling.css                 # Custom CSS styles
+├── 🧪 tests/
+│   ├── test_data_processing.py     # Unit tests for data functions
+│   └── test_visualizations.py      # Visualization testing
+└── 📜 README.md                    # This file
+```
 
-🔍 Advanced Features
+---
+
+## 🔍 Advanced Features
+
 <details>
-<summary><b>📊 Statistical Testing Framework</b></summary>
-A/B Testing Capabilities
+<summary><b>📊 Real-Time Simulation Engine</b></summary>
 
-Frequentist Methods: Traditional hypothesis testing with p-values
-Bayesian Analysis: Probability-based decision making
-Power Analysis: Sample size calculation and experiment planning
-Effect Size Estimation: Practical significance assessment
+### Live Data Generation
+- **Dynamic Timestamps**: 30 data points with 5-minute intervals
+- **Realistic Metrics**: Sessions (80-150), conversions (5-25), error rates (0.1-1.0%)
+- **Statistical Variation**: Numpy random generation with controlled ranges
+- **Performance Calculations**: Real-time conversion rate computation
+- **Trend Analysis**: Historical pattern simulation for realistic business scenarios
 
-Statistical Methods
-python# Frequentist Testing
-from scipy.stats import chi2_contingency
-p_value = chi2_contingency(contingency_table)[1]
+### Key Capabilities
+- **Session Monitoring**: Active user tracking with trend visualization
+- **Conversion Analysis**: Real-time rate calculations with performance indicators
+- **Error Tracking**: System health monitoring with visual alerts
+- **KPI Dashboard**: Snapshot metrics with threshold-based color coding
+- **Time Series Charts**: Interactive Plotly visualizations with hover details
 
-# Bayesian Analysis  
-import numpy as np
-samples_control = np.random.beta(alpha_c, beta_c, 10000)
-samples_variant = np.random.beta(alpha_v, beta_v, 10000)
-prob_variant_better = np.mean(samples_variant > samples_control)
-
-# Power Analysis
-from scipy.stats import norm
-sample_size = ((z_alpha + z_beta) ** 2 * 2 * pooled_rate * (1 - pooled_rate)) / effect_size ** 2
-</details>
-<details>
-<summary><b>🎛️ Interactive Filtering System</b></summary>
-Global Filter Controls
-
-Plan Selection: Filter by pricing tier (Basic, Pro, Enterprise)
-Geographic Filtering: Region-specific analysis
-Time Range Selection: Historical data analysis
-Real-Time Updates: Dynamic dashboard refresh
-
-Filter Implementation
-python# Sidebar global filters
-selected_plan = st.sidebar.selectbox("Pricing Plan", ["All", "Basic", "Pro", "Enterprise"])
-selected_region = st.sidebar.selectbox("Region", ["All", "North America", "Europe", "APAC"])
-selected_year = st.sidebar.slider("Year", 2021, 2024, 2024)
-
-# Apply filters to data
-df_filtered = df.copy()
-if selected_plan != "All":
-    df_filtered = df_filtered[df_filtered["plan"] == selected_plan]
-if selected_region != "All":
-    df_filtered = df_filtered[df_filtered["region"] == selected_region]
-</details>
-<details>
-<summary><b>🔍 Troubleshooting</b></summary>
-Common Issues
-Q: Dashboard loading slowly
-bash# Enable Streamlit caching
-@st.cache_data
-def load_data():
-    return pd.read_csv('data.csv')
-
-# Optimize data processing
-df = df.sample(n=1000)  # For large datasets
-Q: SHAP visualizations not displaying
-bash# Install required dependencies
-pip install shap matplotlib
-
-# Clear matplotlib cache
-import matplotlib.pyplot as plt
-plt.clf()  # Clear figure after each plot
-Q: Memory issues with large datasets
-bash# Use data sampling
-df_sample = df.sample(frac=0.1)  # Use 10% of data
-
-# Optimize pandas operations
-df = df.astype({'categorical_column': 'category'})
 </details>
 
-🏆 Portfolio Value
-Technical Skills Demonstrated
+<details>
+<summary><b>🧪 A/B Testing Statistical Framework</b></summary>
 
-Full-Stack Development: Complete analytics platform from data processing to visualization
-Data Science: Statistical analysis, machine learning, and predictive modeling
-Business Intelligence: Executive dashboards and strategic insights
-Real-Time Systems: Live monitoring and alerting capabilities
-User Experience: Intuitive interface design and interactive visualizations
+### Statistical Methods
+- **Frequentist Analysis**: P-value calculation with significance testing
+- **Bayesian Inference**: Beta-binomial modeling with probability distributions
+- **Power Analysis**: Sample size estimation with effect size calculation
+- **Confidence Intervals**: Statistical significance assessment
+- **Lift Calculation**: Performance improvement measurement
 
-Business Impact Showcase
+### Experiment Types
+- **UI/UX Tests**: Button color, layout, and design variations
+- **User Experience**: Onboarding flow and user journey optimization
+- **Conversion Optimization**: CTA placement and messaging effectiveness
+- **Feature Testing**: Product feature impact on key metrics
 
-Executive-Ready Analytics with KPI scorecards and strategic insights
-Predictive Intelligence with ML-powered churn and LTV models
-Statistical Rigor in A/B testing and experiment design
-Scalable Architecture supporting real-time monitoring and analysis
-Professional Documentation with comprehensive strategy proposals
+</details>
 
+<details>
+<summary><b>🤖 Machine Learning Integration</b></summary>
 
-🤝 Contributing
-We welcome contributions to enhance this monetization analytics platform! 🎉
-Show Image
-🛠️ How to Contribute
+### Predictive Models
+- **Churn Prediction**: Customer risk scoring with probability assessment
+- **Lifetime Value (LTV)**: Revenue prediction with feature importance
+- **Feature Engineering**: SHAP value calculation for model explainability
+- **Model Versioning**: Version control with performance tracking
+- **Performance Metrics**: Accuracy, AUC-ROC, RMSE, and R² monitoring
 
-🍴 Fork the repository to your GitHub account
-🌿 Create a feature branch: git checkout -b feature/add-new-analytics
-💻 Make your changes: Implement features or bug fixes
-✅ Test thoroughly: Ensure changes work with existing functionality
-📝 Commit with clear messages: git commit -m "feat: Add new analytics feature"
-🚀 Push to your branch: git push origin feature/your-feature-name
-📬 Open a Pull Request: Submit PR with clear description of changes
+### SHAP Explainability
+- **Force Plots**: Individual prediction explanation with feature contributions
+- **Waterfall Charts**: Step-by-step feature impact visualization
+- **Decision Plots**: Multi-sample comparison with feature pathways
+- **Feature Importance**: Global and local feature ranking
+- **Interactive Visualizations**: Dynamic SHAP plot generation
 
-🎯 Contribution Areas
+</details>
+
+<details>
+<summary><b>🌍 Geographic Intelligence System</b></summary>
+
+### Mapping Capabilities
+- **Dual View Modes**: US localized and global regional analysis
+- **Interactive Mapbox**: Scatter plots with size and color encoding
+- **City-Level Analysis**: US metropolitan area performance tracking
+- **Regional Performance**: Global conversion rate mapping
+- **Dynamic Filtering**: Geography-based data segmentation
+
+### Data Integration
+- **Coordinate Mapping**: Region to latitude/longitude conversion
+- **Performance Metrics**: Customer count and conversion rate visualization
+- **Hover Interactions**: Detailed metrics on map element interaction
+- **Zoom Controls**: Multi-level geographic exploration
+- **Responsive Design**: Mobile-optimized map visualization
+
+</details>
+
+---
+
+## 🏆 Technical Excellence
+
+### Code Quality & Architecture
+- **Modular Design**: Clean separation of concerns with reusable components
+- **Performance Optimization**: Caching decorators and efficient data processing
+- **Error Handling**: Robust exception management and user feedback
+- **Responsive UI**: Mobile-friendly design with adaptive layouts
+- **Documentation**: Comprehensive inline comments and docstrings
+
+### Data Processing Excellence
+- **Pandas Integration**: Efficient data manipulation and analysis
+- **Statistical Computing**: SciPy integration for advanced analytics
+- **Visualization Framework**: Plotly integration for interactive charts
+- **Real-time Simulation**: Dynamic data generation for demo purposes
+- **Filter System**: Global filtering with cascading updates
+
+### Security & Best Practices
+- **Input Validation**: Data type checking and boundary validation
+- **Error Recovery**: Graceful handling of missing or malformed data
+- **Performance Monitoring**: Efficient memory usage and processing
+- **Scalable Architecture**: Designed for production deployment
+- **Version Control**: Git-ready with proper project structure
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions to enhance this telemetry monetization platform! 🎉
+
+[![Contributors Welcome](https://img.shields.io/badge/Contributors-Welcome-brightgreen?style=for-the-badge)](#-contributing)
+
+### 🛠️ How to Contribute
+
+1. **🍴 Fork the repository** to your GitHub account
+2. **🌿 Create a feature branch**: `git checkout -b feature/add-new-analytics`
+3. **💻 Make your changes**: Implement features or bug fixes
+4. **✅ Test thoroughly**: Ensure changes work with existing functionality
+5. **📝 Commit with clear messages**: `git commit -m "feat: Add new analytics feature"`
+6. **🚀 Push to your branch**: `git push origin feature/your-feature-name`
+7. **📬 Open a Pull Request**: Submit PR with clear description of changes
+
+### 🎯 Contribution Areas
+
 <table>
 <tr>
 <td width="50%">
-🔧 Technical Improvements
 
-Add new visualization types and chart options
-Implement additional ML models and algorithms
-Enhance real-time data processing capabilities
-Add new statistical testing methods
-Integrate with external data sources and APIs
+**🔧 Technical Enhancements**
+- Add new dashboard tabs and analytics capabilities
+- Implement real data source connections
+- Enhance ML model integration and predictions
+- Improve performance and caching strategies
+- Add new visualization types and interactive features
 
 </td>
 <td width="50%">
-📚 Documentation & Examples
 
-Tutorial improvements and step-by-step guides
-New use case examples and case studies
-Video demonstrations and walkthroughs
-API documentation and integration guides
-Performance optimization guides
+**📚 Documentation & Examples**
+- Create video tutorials and demos
+- Add more comprehensive user guides
+- Write technical implementation blogs
+- Provide deployment instructions for various platforms
+- Translate documentation to other languages
 
 </td>
 </tr>
 </table>
-📋 Development Guidelines
 
-Code Style: Follow PEP 8 for Python, use type hints where applicable
-Testing: Add unit tests for new calculations and visualizations
-Documentation: Update README and add docstrings for new features
-Performance: Consider performance implications for large datasets
-Accessibility: Ensure visualizations are colorblind-friendly
+### 📋 Development Guidelines
 
+- **Code Style**: Follow PEP 8 for Python, use tools like `black` and `flake8`
+- **Testing**: Add unit tests for new functions and components
+- **Documentation**: Update README and inline documentation for new features
+- **Performance**: Consider performance implications, especially for large datasets
+- **User Experience**: Maintain intuitive design and responsive layouts
 
-📬 Contact & Support
-Project Maintainer: [Your Name]
-LinkedIn: [Your LinkedIn Profile]
-Email: [Your Email]
-📚 Support & Documentation
+---
 
-📋 User Guide: Comprehensive dashboard navigation
-💼 Business Context: Strategy and pricing documentation
-🔧 Technical Docs: API reference and customization guide
-🐛 Issues: GitHub Issues tab for bug reports
-💬 Discussions: GitHub Discussions for feature requests
+## 📬 Contact & Support
 
-Feedback Welcome
+**Project Creator**: [Your Name]  
+**LinkedIn**: [your-linkedin-profile]  
+**Email**: [your-email@example.com]  
+**GitHub**: [your-github-username]
 
-🌟 Star the repository if you find it valuable
-🍴 Fork and customize for your own use cases
-🐛 Report issues via GitHub Issues
-💡 Suggest enhancements via GitHub Discussions
-📧 Direct feedback via email or LinkedIn
+### 📚 Support Resources
+- 📋 **Documentation**: Inline code comments and docstrings
+- 🐛 **Issues**: GitHub Issues tab for bug reports
+- 💬 **Discussions**: GitHub Discussions for feature requests
+- 📧 **Direct Contact**: Email for collaboration opportunities
 
+### Community & Feedback
+- 🌟 **Star the repository** if you find it valuable
+- 🍴 **Fork and customize** for your own analytics needs
+- 🐛 **Report issues** via GitHub Issues
+- 💡 **Suggest enhancements** via GitHub Discussions
+- 📧 **Share your implementation** via email or social media
 
-📄 License
-This project is released under the MIT License. Feel free to use, modify, and distribute for personal and commercial purposes.
-Attribution: If you use this project as inspiration or reference, please provide appropriate credit and link back to the original repository.
+---
+
+## 📄 License
+
+This project is released under the **MIT License**. Feel free to use, modify, and distribute for personal and commercial purposes.
+
+**Attribution**: If you use this project as inspiration or reference, please provide appropriate credit and link back to the original repository.
+
+---
 
 <div align="center">
-🚀 Ready to explore telemetry monetization analytics?
-bashstreamlit run streamlit_app.py
-🌟 Star this repo if you found it helpful! ⭐
-Show Image
-Last Updated: June 2025 | Version 1.0
+
+### 🚀 **Ready to explore telemetry monetization analytics?**
+
+```bash
+streamlit run streamlit_app.py
+```
+
+**🌟 Star this repo if you found it helpful!** ⭐
+
+[![GitHub stars](https://img.shields.io/github/stars/your-username/telemetry-monetization-dashboard?style=social)](https://github.com/your-username/telemetry-monetization-dashboard/stargazers)
+
+*Built with ❤️ for data-driven decision making | Last Updated: June 2025*
+
 </div>
