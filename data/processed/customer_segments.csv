@@ -1,0 +1,51 @@
+segment_id,segment_name,avg_revenue_per_user,retention_rate,support_tickets_per_month,feature_adoption_score
+SEG_001,Power Users,387.45,0.892,1,0.94
+SEG_002,Casual Users,123.67,0.734,3,0.56
+SEG_003,Enterprise,456.78,0.945,0,0.87
+SEG_004,Startups,89.99,0.623,4,0.72
+SEG_005,Agencies,234.56,0.834,2,0.81
+SEG_006,Power Users,423.12,0.901,1,0.92
+SEG_007,Casual Users,98.45,0.712,5,0.43
+SEG_008,Enterprise,498.77,0.934,0,0.89
+SEG_009,Startups,67.89,0.645,3,0.67
+SEG_010,Agencies,278.34,0.823,2,0.78
+SEG_011,Power Users,356.78,0.887,1,0.91
+SEG_012,Casual Users,145.23,0.756,4,0.52
+SEG_013,Enterprise,523.45,0.923,1,0.85
+SEG_014,Startups,78.99,0.634,4,0.69
+SEG_015,Agencies,289.67,0.845,2,0.83
+SEG_016,Power Users,412.34,0.898,0,0.95
+SEG_017,Casual Users,134.56,0.723,3,0.48
+SEG_018,Enterprise,487.89,0.912,0,0.88
+SEG_019,Startups,92.34,0.656,5,0.71
+SEG_020,Agencies,267.89,0.834,1,0.79
+SEG_021,Power Users,389.45,0.889,1,0.93
+SEG_022,Casual Users,156.78,0.745,4,0.54
+SEG_023,Enterprise,456.12,0.934,0,0.86
+SEG_024,Startups,83.45,0.612,3,0.68
+SEG_025,Agencies,234.67,0.823,2,0.82
+SEG_026,Power Users,445.67,0.903,1,0.96
+SEG_027,Casual Users,123.89,0.698,5,0.45
+SEG_028,Enterprise,512.34,0.945,0,0.91
+SEG_029,Startups,74.56,0.623,4,0.66
+SEG_030,Agencies,298.45,0.856,2,0.84
+SEG_031,Power Users,367.89,0.885,1,0.89
+SEG_032,Casual Users,167.23,0.734,3,0.57
+SEG_033,Enterprise,478.90,0.923,1,0.87
+SEG_034,Startups,89.67,0.645,4,0.73
+SEG_035,Agencies,256.78,0.834,2,0.80
+SEG_036,Power Users,398.56,0.892,0,0.94
+SEG_037,Casual Users,134.78,0.712,5,0.49
+SEG_038,Enterprise,534.56,0.934,0,0.92
+SEG_039,Startups,78.23,0.634,3,0.67
+SEG_040,Agencies,289.34,0.845,1,0.83
+SEG_041,Power Users,423.67,0.898,1,0.95
+SEG_042,Casual Users,145.89,0.723,4,0.53
+SEG_043,Enterprise,467.89,0.912,0,0.88
+SEG_044,Startups,94.56,0.656,5,0.72
+SEG_045,Agencies,278.90,0.834,2,0.81
+SEG_046,Power Users,356.45,0.889,1,0.91
+SEG_047,Casual Users,178.23,0.745,3,0.58
+SEG_048,Enterprise,489.67,0.934,0,0.89
+SEG_049,Startups,87.34,0.612,4,0.69
+SEG_050,Agencies,267.45,0.823,2,0.82
