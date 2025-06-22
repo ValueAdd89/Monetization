@@ -37,7 +37,7 @@ st.markdown("""
     margin-bottom: 10px;
 }
 /* This CSS is for the st.columns layout for metrics, ensuring consistent spacing */
-div.st-emotion-cache-1kyxreq yf2f11x1 { /* Targeting the column elements specifically */
+div.st-emotion-cache-1kyxreq { /* This targets the column containers */
     justify-content: space-around;
     gap: 20px;
 }
@@ -63,6 +63,7 @@ def load_main_data():
     Loads pricing elasticity and funnel data from specified CSV files.
     Includes robust error handling for file not found or empty files.
     NOTE: Removed st.info/st.success messages to prevent cluttering UI.
+    Adds dummy 'region' and 'plan' columns to funnel_data for filtering demo.
     """
     base_path = Path(__file__).parent.parent / "data" / "processed"
     pricing_elasticity_path = base_path / "pricing_elasticity.csv"
@@ -74,15 +75,27 @@ def load_main_data():
     try:
         if pricing_elasticity_path.exists():
             df_main_loaded = pd.read_csv(pricing_elasticity_path)
-        # else:
-        #    # Consider logging this or showing a subtle warning elsewhere if crucial
-        #    pass 
+        else:
+            # For robustness, create a dummy empty DataFrame if file not found
+            # Or consider stopping the app with st.error("Critical file not found!")
+            pass
 
         if funnel_data_path.exists():
             funnel_main_loaded = pd.read_csv(funnel_data_path)
-        # else:
-        #    # Consider logging this or showing a subtle warning elsewhere if crucial
-        #    pass
+            # --- FIX: Add dummy 'region' and 'plan' columns to funnel_main_loaded ---
+            # This makes the filters in the funnel tab responsive for demonstration.
+            # In a real app, ensure your funnel_data.csv naturally contains these.
+            num_rows = len(funnel_main_loaded)
+            if num_rows > 0:
+                np.random.seed(42) # for reproducibility
+                regions = ["North America", "Europe", "APAC", "LATAM"]
+                plans = ["Basic", "Pro", "Enterprise"]
+                funnel_main_loaded['region'] = np.random.choice(regions, num_rows)
+                funnel_main_loaded['plan'] = np.random.choice(plans, num_rows)
+                funnel_main_loaded['year'] = np.random.choice([2021, 2022, 2023, 2024], num_rows)
+            # --- END FIX ---
+        else:
+            pass
 
     except pd.errors.EmptyDataError:
         st.error("One or both main CSV files are empty. Please check their content.")
@@ -224,7 +237,6 @@ with tab_real_time:
                                  margin=dict(l=20, r=20, t=40, b=20))
         st.plotly_chart(fig_errors, use_container_width=True)
 
-
 # --- New Tab: Funnel Analysis ---
 with tab_funnel:
     st.header("🔄 Funnel Analysis")
@@ -234,13 +246,20 @@ with tab_funnel:
     with st.container(border=True):
         col_f1, col_f2, col_f3 = st.columns(3)
         with col_f1:
-            funnel_plan = st.selectbox("Plan (Funnel)", ["All", "Basic", "Pro", "Enterprise"], key="funnel_plan")
+            # Check if 'plan' column exists before populating selectbox options
+            plan_options = ["All"] + (funnel_df_main['plan'].unique().tolist() if 'plan' in funnel_df_main.columns else [])
+            funnel_plan = st.selectbox("Plan (Funnel)", plan_options, key="funnel_plan")
         with col_f2:
-            funnel_region = st.selectbox("Region (Funnel)", ["All", "North America", "Europe", "APAC", "LATAM"], key="funnel_region")
+            # Check if 'region' column exists before populating selectbox options
+            region_options = ["All"] + (funnel_df_main['region'].unique().tolist() if 'region' in funnel_df_main.columns else [])
+            funnel_region = st.selectbox("Region (Funnel)", region_options, key="funnel_region")
         with col_f3:
-            funnel_year = st.slider("Year (Funnel)", 2021, 2024, 2024, key="funnel_year")
+            # Check if 'year' column exists before populating slider options
+            min_year = int(funnel_df_main['year'].min()) if 'year' in funnel_df_main.columns and not funnel_df_main['year'].empty else 2021
+            max_year = int(funnel_df_main['year'].max()) if 'year' in funnel_df_main.columns and not funnel_df_main['year'].empty else 2024
+            funnel_year = st.slider("Year (Funnel)", min_year, max_year, max_year, key="funnel_year")
 
-    # Apply filters to funnel_df_main (assuming it has these columns for more granular filtering)
+    # Apply filters to funnel_df_main
     funnel_df_filtered = funnel_df_main.copy()
     if funnel_plan != "All" and 'plan' in funnel_df_filtered.columns:
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["plan"] == funnel_plan]
@@ -253,12 +272,11 @@ with tab_funnel:
     with st.container(border=True):
         if not funnel_df_filtered.empty:
             if 'step' in funnel_df_filtered.columns and 'count' in funnel_df_filtered.columns:
-                # Ensure 'step_order' exists for sorting
                 if 'step_order' in funnel_df_filtered.columns:
                     funnel_df_sorted = funnel_df_filtered.sort_values(by="step_order", ascending=True)
                 else:
                     st.warning("Column 'step_order' not found, funnel chart may not be sorted correctly.")
-                    funnel_df_sorted = funnel_df_filtered # Use unsorted if order column is missing
+                    funnel_df_sorted = funnel_df_filtered
                 
                 fig_funnel = px.funnel(
                     funnel_df_sorted,
@@ -284,7 +302,7 @@ with tab_pricing:
 
     st.markdown("#### User & Revenue Distribution by Plan (Simulated Data)")
     with st.container(border=True):
-        col_users_pricing, col_arpu_pricing = st.columns(2) # Side-by-side
+        col_users_pricing, col_arpu_pricing = st.columns(2)
         pricing_df = pd.DataFrame({
             "Plan": ["Free", "Starter", "Pro", "Enterprise"],
             "Users": [5000, 3000, 1200, 300],
@@ -316,7 +334,6 @@ with tab_ab_testing:
         experiment = st.selectbox("Select Experiment", ["Pricing Button Color", "Onboarding Flow", "Homepage CTA"], key="ab_experiment_select")
         method = st.radio("Statistical Method", ["Frequentist", "Bayesian"], key="ab_method_radio")
 
-    # Simulated A/B test data
     if experiment == "Pricing Button Color":
         ab_df = pd.DataFrame({
             "Group": ["Control", "Variant"],
@@ -341,7 +358,7 @@ with tab_ab_testing:
 
     st.markdown("#### Conversion Rate Comparison")
     with st.container(border=True):
-        col_ab_chart, col_ab_metrics = st.columns([2, 1]) # Chart takes more space
+        col_ab_chart, col_ab_metrics = st.columns([2, 1])
         with col_ab_chart:
             fig_ab = px.bar(ab_df, x="Group", y="Conversion Rate (%)", color="Group", text="Conversion Rate (%)", title="Conversion Rate by Group")
             st.plotly_chart(fig_ab, use_container_width=True)
@@ -422,14 +439,13 @@ with tab_ml_insights:
         })
         st.subheader("📉 Predicted Churn Risk")
         with st.container(border=True):
-            col_ml_chart, col_ml_data = st.columns([2,1]) # Chart takes more space
+            col_ml_chart, col_ml_data = st.columns([2,1])
             with col_ml_chart:
                 fig_churn_ml = px.bar(ml_df, x="Customer ID", y="Churn Probability", color="Top SHAP Feature",
                                     title="SHAP-Informed Churn Risk")
                 st.plotly_chart(fig_churn_ml, use_container_width=True)
             with col_ml_data:
                 st.dataframe(ml_df, use_container_width=True)
-
 
         if show_metrics:
             st.subheader("📊 Model Performance")
@@ -449,10 +465,10 @@ with tab_ml_insights:
         })
         st.subheader("📈 Predicted Customer LTV")
         with st.container(border=True):
-            col_ml_chart, col_ml_data = st.columns([2,1]) # Chart takes more space
+            col_ml_chart, col_ml_data = st.columns([2,1])
             with col_ml_chart:
                 fig_ltv_ml = px.bar(ml_df, x="Customer ID", y="Predicted LTV ($)", color="Top SHAP Feature",
-                                    title="SHAP-Informed LTV Predictions")
+                                title="SHAP-Informed LTV Predictions")
                 st.plotly_chart(fig_ltv_ml, use_container_width=True)
             with col_ml_data:
                 st.dataframe(ml_df, use_container_width=True)
@@ -466,10 +482,7 @@ with tab_ml_insights:
     if show_force:
         st.subheader("⚡ SHAP Visualizations (Simulated)")
         
-        # Ensure only one figure per st.pyplot call to avoid issues
-        col_waterfall, col_decision = st.columns(2)
-
-        with st.container(border=True): # Wrap all SHAP plots in one larger card
+        with st.container(border=True):
             background_data = np.random.rand(100, 5)
             dummy_predict = lambda x: np.random.rand(x.shape[0])
             explainer_sim = shap.Explainer(dummy_predict, background_data)
@@ -483,6 +496,7 @@ with tab_ml_insights:
             else:
                 st.info("Not enough SHAP values for Force Plot.")
             
+            col_waterfall, col_decision = st.columns(2) # Side-by-side SHAP plots
             with col_waterfall:
                 st.markdown("##### Waterfall Plot (Simulated Sample)")
                 if hasattr(shap_values_sim, 'values') and shap_values_sim.values.size > 0:
@@ -555,6 +569,9 @@ with tab_geographic:
                     geo_data_main = geo_data_main.dropna(subset=['lat', 'lon'])
 
                     if not geo_data_main.empty:
+                        # For a "US map style" global map, we use px.scatter_mapbox instead of px.scatter_geo
+                        # This provides consistent styling with the US map, requiring a Mapbox token for real-world use.
+                        # For local dev without token, carto-positron works fine.
                         fig_map_global = px.scatter_mapbox(
                             geo_data_main,
                             lat="lat",
@@ -564,7 +581,7 @@ with tab_geographic:
                             hover_name="display_name",
                             size_max=40,
                             zoom=1,
-                            mapbox_style="carto-positron",
+                            mapbox_style="carto-positron", # Requires Mapbox token for custom styles, but this is a free default
                             title="Global Conversion Rate by Region (Main Data)"
                         )
                         st.plotly_chart(fig_map_global, use_container_width=True)
