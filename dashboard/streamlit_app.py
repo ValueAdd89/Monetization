@@ -36,11 +36,10 @@ st.markdown("""
     padding: 15px;
     margin-bottom: 10px;
 }
-.kpi-row {
-    display: flex;
+/* This CSS is for the st.columns layout for metrics, ensuring consistent spacing */
+div.st-emotion-cache-1kyxreq yf2f11x1 { /* Targeting the column elements specifically */
     justify-content: space-around;
-    gap: 20px; /* Space between KPI columns */
-    margin-bottom: 20px;
+    gap: 20px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -63,44 +62,38 @@ def load_main_data():
     """
     Loads pricing elasticity and funnel data from specified CSV files.
     Includes robust error handling for file not found or empty files.
+    NOTE: Removed st.info/st.success messages to prevent cluttering UI.
     """
     base_path = Path(__file__).parent.parent / "data" / "processed"
     pricing_elasticity_path = base_path / "pricing_elasticity.csv"
     funnel_data_path = base_path / "funnel_data.csv"
 
-    st.info(f"Attempting to load pricing elasticity data from: {pricing_elasticity_path}")
-    st.info(f"Attempting to load funnel data from: {funnel_data_path}")
-
-    df_main_loaded = pd.DataFrame()  # Initialize to empty DataFrame
-    funnel_main_loaded = pd.DataFrame()  # Initialize to empty DataFrame
+    df_main_loaded = pd.DataFrame()
+    funnel_main_loaded = pd.DataFrame()
 
     try:
         if pricing_elasticity_path.exists():
             df_main_loaded = pd.read_csv(pricing_elasticity_path)
-        else:
-            st.warning(f"Pricing elasticity file not found at: {pricing_elasticity_path}")
+        # else:
+        #    # Consider logging this or showing a subtle warning elsewhere if crucial
+        #    pass 
 
         if funnel_data_path.exists():
             funnel_main_loaded = pd.read_csv(funnel_data_path)
-        else:
-            st.warning(f"Funnel data file not found at: {funnel_data_path}")
+        # else:
+        #    # Consider logging this or showing a subtle warning elsewhere if crucial
+        #    pass
 
-        if not df_main_loaded.empty or not funnel_main_loaded.empty:
-            st.success("Main data files loaded successfully!")
-        else:
-            st.warning("No main data loaded. Check if CSV files exist and are not empty.")
-
-    except pd.errors.EmptyDataError as ede:
-        st.error(f"One or both main CSV files are empty. Please check their content. Error: {ede}")
+    except pd.errors.EmptyDataError:
+        st.error("One or both main CSV files are empty. Please check their content.")
     except Exception as e:
-        st.error(f"An unexpected error occurred while loading main data: {e}")
+        st.error(f"An unexpected error occurred during data loading: {e}")
     return df_main_loaded, funnel_main_loaded
 
-# Load the main data used for specific parts of the dashboard (e.g., Overview KPIs)
+# Load the main data
 df_main, funnel_df_main = load_main_data()
 
 # --- Filter Main Data based on Global Sidebar Selections ---
-# This filtered data is specifically for parts that rely on pricing_elasticity.csv
 df_main_filtered = df_main.copy()
 if selected_plan_global != "All":
     df_main_filtered = df_main_filtered[df_main_filtered["plan"] == selected_plan_global]
@@ -114,16 +107,15 @@ def kpi_color(value, thresholds):
     Returns an emoji based on the value relative to given thresholds.
     """
     if not isinstance(value, (int, float)):
-        return "⚪" # Grey circle for N/A
+        return "⚪"
     if value >= thresholds[1]:
-        return "🟢" # Green
+        return "🟢"
     elif value >= thresholds[0]:
-        return "🟡" # Yellow
+        return "🟡"
     else:
-        return "🔴" # Red
+        return "🔴"
 
 # --- Dashboard Tabs (Main Content Area) ---
-# Reordered tabs: Overview, Real-Time, Funnel, Pricing, A/B Testing, ML Insights, Geographic
 tab_overview, tab_real_time, tab_funnel, tab_pricing, tab_ab_testing, tab_ml_insights, tab_geographic = st.tabs([
     "📈 Overview",
     "📊 Real-Time Monitoring",
@@ -140,7 +132,7 @@ with tab_overview:
     st.markdown("This dashboard provides a high-level view of monetization performance.")
 
     st.markdown("#### Key Metrics (from Main Data)")
-    with st.container(border=True): # Card format
+    with st.container(border=True):
         col1, col2, col3 = st.columns(3)
         
         if not df_main_filtered.empty:
@@ -158,19 +150,22 @@ with tab_overview:
         col3.metric("Plans", plans_count)
 
     st.markdown("#### Monthly Recurring Revenue & Churn Rate (Simulated Data)")
-    with st.container(border=True): # Card format
+    with st.container(border=True):
+        col_mrr, col_churn = st.columns(2) # Side-by-side for these two visuals
         overview_data = pd.DataFrame({
             "Month": pd.date_range("2024-01-01", periods=6, freq="M"),
             "MRR": [10000, 12000, 14000, 16000, 18000, 20000],
             "Churn Rate": [0.05, 0.04, 0.045, 0.035, 0.03, 0.025]
         })
-        fig_mrr = px.bar(overview_data, x="Month", y="MRR", title="Monthly Recurring Revenue")
-        st.plotly_chart(fig_mrr, use_container_width=True)
-        fig_churn = px.line(overview_data, x="Month", y="Churn Rate", title="Churn Rate Over Time")
-        st.plotly_chart(fig_churn, use_container_width=True)
+        with col_mrr:
+            fig_mrr = px.bar(overview_data, x="Month", y="MRR", title="Monthly Recurring Revenue")
+            st.plotly_chart(fig_mrr, use_container_width=True)
+        with col_churn:
+            fig_churn = px.line(overview_data, x="Month", y="Churn Rate", title="Churn Rate Over Time")
+            st.plotly_chart(fig_churn, use_container_width=True)
 
     st.markdown("#### Filtered Raw Data (from Main Pricing Elasticity Data)")
-    with st.container(border=True): # Card format
+    with st.container(border=True):
         st.dataframe(df_main_filtered, use_container_width=True)
 
 
@@ -190,36 +185,38 @@ with tab_real_time:
     })
 
     st.markdown("#### Current Snapshot KPIs")
-    with st.container(border=True): # Card format
+    with st.container(border=True):
         col1, col2, col3 = st.columns(3)
         col1.metric("Current Sessions", int(rt_df['Active Sessions'].iloc[-1]))
-        if rt_df['Active Sessions'].iloc[-1] > 0: # Avoid division by zero
+        if rt_df['Active Sessions'].iloc[-1] > 0:
             col2.metric("Current Conversion Rate",
                         f"{(rt_df['Conversions'].iloc[-1] / rt_df['Active Sessions'].iloc[-1] * 100):.1f}%")
         else:
             col2.metric("Current Conversion Rate", "N/A")
         col3.metric("Current Error Rate", f"{rt_df['Error Rate (%)'].iloc[-1]:.2f}%")
 
-    st.markdown("#### Active Sessions Over Time")
-    with st.container(border=True): # Card format
-        fig_sessions = go.Figure()
-        fig_sessions.add_trace(go.Scatter(x=rt_df["Timestamp"], y=rt_df["Active Sessions"],
-                                         mode="lines+markers"))
-        fig_sessions.update_layout(xaxis_title="Time", yaxis_title="Sessions",
-                                   margin=dict(l=20, r=20, t=40, b=20))
-        st.plotly_chart(fig_sessions, use_container_width=True)
-
-    st.markdown("#### Conversions Over Time")
-    with st.container(border=True): # Card format
-        fig_conversions = go.Figure()
-        fig_conversions.add_trace(go.Scatter(x=rt_df["Timestamp"], y=rt_df["Conversions"],
-                                             mode="lines+markers", line=dict(color='green')))
-        fig_conversions.update_layout(xaxis_title="Time", yaxis_title="Conversions",
-                                      margin=dict(l=20, r=20, t=40, b=20))
-        st.plotly_chart(fig_conversions, use_container_width=True)
-
-    st.markdown("#### Error Rate Monitoring")
-    with st.container(border=True): # Card format
+    st.markdown("#### Real-Time Trends")
+    with st.container(border=True):
+        col_sessions, col_conversions = st.columns(2) # Side-by-side
+        with col_sessions:
+            st.subheader("Active Sessions Over Time")
+            fig_sessions = go.Figure()
+            fig_sessions.add_trace(go.Scatter(x=rt_df["Timestamp"], y=rt_df["Active Sessions"],
+                                             mode="lines+markers"))
+            fig_sessions.update_layout(xaxis_title="Time", yaxis_title="Sessions",
+                                       margin=dict(l=20, r=20, t=40, b=20))
+            st.plotly_chart(fig_sessions, use_container_width=True)
+        with col_conversions:
+            st.subheader("Conversions Over Time")
+            fig_conversions = go.Figure()
+            fig_conversions.add_trace(go.Scatter(x=rt_df["Timestamp"], y=rt_df["Conversions"],
+                                                 mode="lines+markers", line=dict(color='green')))
+            fig_conversions.update_layout(xaxis_title="Time", yaxis_title="Conversions",
+                                          margin=dict(l=20, r=20, t=40, b=20))
+            st.plotly_chart(fig_conversions, use_container_width=True)
+        
+        # Error rate below the two
+        st.subheader("Error Rate Monitoring")
         fig_errors = go.Figure()
         fig_errors.add_trace(go.Scatter(x=rt_df["Timestamp"], y=rt_df["Error Rate (%)"],
                                         mode="lines", fill='tozeroy', line=dict(color='red')))
@@ -227,17 +224,21 @@ with tab_real_time:
                                  margin=dict(l=20, r=20, t=40, b=20))
         st.plotly_chart(fig_errors, use_container_width=True)
 
+
 # --- New Tab: Funnel Analysis ---
 with tab_funnel:
     st.header("🔄 Funnel Analysis")
     st.markdown("Analyze user journey drop-offs and conversion rates at each stage.")
 
-    # Filters for Funnel Analysis
     st.markdown("#### Funnel Filters")
     with st.container(border=True):
-        funnel_plan = st.selectbox("Plan (Funnel)", ["All", "Basic", "Pro", "Enterprise"], key="funnel_plan")
-        funnel_region = st.selectbox("Region (Funnel)", ["All", "North America", "Europe", "APAC", "LATAM"], key="funnel_region")
-        funnel_year = st.slider("Year (Funnel)", 2021, 2024, 2024, key="funnel_year")
+        col_f1, col_f2, col_f3 = st.columns(3)
+        with col_f1:
+            funnel_plan = st.selectbox("Plan (Funnel)", ["All", "Basic", "Pro", "Enterprise"], key="funnel_plan")
+        with col_f2:
+            funnel_region = st.selectbox("Region (Funnel)", ["All", "North America", "Europe", "APAC", "LATAM"], key="funnel_region")
+        with col_f3:
+            funnel_year = st.slider("Year (Funnel)", 2021, 2024, 2024, key="funnel_year")
 
     # Apply filters to funnel_df_main (assuming it has these columns for more granular filtering)
     funnel_df_filtered = funnel_df_main.copy()
@@ -245,15 +246,20 @@ with tab_funnel:
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["plan"] == funnel_plan]
     if funnel_region != "All" and 'region' in funnel_df_filtered.columns:
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["region"] == funnel_region]
-    if 'year' in funnel_df_filtered.columns: # Assuming year is always present or handled
+    if 'year' in funnel_df_filtered.columns:
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["year"] == funnel_year]
     
-    st.markdown("#### Funnel Drop-Off Chart")
-    with st.container(border=True): # Card format
+    st.markdown("#### User Journey Funnel Drop-Off")
+    with st.container(border=True):
         if not funnel_df_filtered.empty:
-            # Ensure 'step' and 'count' columns are present and data is valid for funnel chart
             if 'step' in funnel_df_filtered.columns and 'count' in funnel_df_filtered.columns:
-                funnel_df_sorted = funnel_df_filtered.sort_values(by="step_order", ascending=True) # Assuming step_order exists
+                # Ensure 'step_order' exists for sorting
+                if 'step_order' in funnel_df_filtered.columns:
+                    funnel_df_sorted = funnel_df_filtered.sort_values(by="step_order", ascending=True)
+                else:
+                    st.warning("Column 'step_order' not found, funnel chart may not be sorted correctly.")
+                    funnel_df_sorted = funnel_df_filtered # Use unsorted if order column is missing
+                
                 fig_funnel = px.funnel(
                     funnel_df_sorted,
                     x="count",
@@ -267,7 +273,7 @@ with tab_funnel:
             st.info("Funnel data is not available for the selected filters.")
     
     st.markdown("#### Raw Funnel Data")
-    with st.container(border=True): # Card format
+    with st.container(border=True):
         st.dataframe(funnel_df_filtered, use_container_width=True)
 
 
@@ -277,21 +283,22 @@ with tab_pricing:
     st.markdown("Analyze user distribution, average revenue per user (ARPU), and price elasticity.")
 
     st.markdown("#### User & Revenue Distribution by Plan (Simulated Data)")
-    with st.container(border=True): # Card format
+    with st.container(border=True):
+        col_users_pricing, col_arpu_pricing = st.columns(2) # Side-by-side
         pricing_df = pd.DataFrame({
             "Plan": ["Free", "Starter", "Pro", "Enterprise"],
             "Users": [5000, 3000, 1200, 300],
             "ARPU": [0, 20, 50, 100]
         })
-
-        fig_users = px.bar(pricing_df, x="Plan", y="Users", title="User Distribution by Plan")
-        st.plotly_chart(fig_users, use_container_width=True)
-
-        fig_arpu = px.bar(pricing_df, x="Plan", y="ARPU", title="ARPU by Plan", color="Plan")
-        st.plotly_chart(fig_arpu, use_container_width=True)
+        with col_users_pricing:
+            fig_users = px.bar(pricing_df, x="Plan", y="Users", title="User Distribution by Plan")
+            st.plotly_chart(fig_users, use_container_width=True)
+        with col_arpu_pricing:
+            fig_arpu = px.bar(pricing_df, x="Plan", y="ARPU", title="ARPU by Plan", color="Plan")
+            st.plotly_chart(fig_arpu, use_container_width=True)
 
     st.markdown("#### Elasticity by Plan (from Main Data - filtered)")
-    with st.container(border=True): # Card format
+    with st.container(border=True):
         if not df_main_filtered.empty:
             fig_elasticity_main = px.bar(df_main_filtered, x="plan", y="elasticity", color="plan", title="Elasticity Distribution (Main Data)")
             st.plotly_chart(fig_elasticity_main, use_container_width=True)
@@ -305,7 +312,7 @@ with tab_ab_testing:
     st.markdown("Evaluate simulated experiment outcomes and determine statistical significance.")
 
     st.markdown("#### Experiment Selection")
-    with st.container(border=True): # Card format
+    with st.container(border=True):
         experiment = st.selectbox("Select Experiment", ["Pricing Button Color", "Onboarding Flow", "Homepage CTA"], key="ab_experiment_select")
         method = st.radio("Statistical Method", ["Frequentist", "Bayesian"], key="ab_method_radio")
 
@@ -329,30 +336,30 @@ with tab_ab_testing:
             "Users": [700, 700]
         })
 
-    # Conversion rate & lift
     ab_df["Conversion Rate (%)"] = (ab_df["Conversions"] / ab_df["Users"]) * 100
     lift = ab_df["Conversion Rate (%)"].iloc[1] - ab_df["Conversion Rate (%)"].iloc[0]
 
     st.markdown("#### Conversion Rate Comparison")
-    with st.container(border=True): # Card format
-        fig_ab = px.bar(ab_df, x="Group", y="Conversion Rate (%)", color="Group", text="Conversion Rate (%)")
-        st.plotly_chart(fig_ab, use_container_width=True)
-
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Control Rate", f"{ab_df['Conversion Rate (%)'].iloc[0]:.1f}%")
-        col2.metric("Variant Rate", f"{ab_df['Conversion Rate (%)'].iloc[1]:.1f}%")
-        col3.metric("Lift", f"{lift:.1f}%")
+    with st.container(border=True):
+        col_ab_chart, col_ab_metrics = st.columns([2, 1]) # Chart takes more space
+        with col_ab_chart:
+            fig_ab = px.bar(ab_df, x="Group", y="Conversion Rate (%)", color="Group", text="Conversion Rate (%)", title="Conversion Rate by Group")
+            st.plotly_chart(fig_ab, use_container_width=True)
+        with col_ab_metrics:
+            st.markdown("##### Key Metrics")
+            st.metric("Control Rate", f"{ab_df['Conversion Rate (%)'].iloc[0]:.1f}%")
+            st.metric("Variant Rate", f"{ab_df['Conversion Rate (%)'].iloc[1]:.1f}%")
+            st.metric("Lift", f"{lift:.1f}%")
 
     st.markdown("#### Statistical Significance")
-    with st.container(border=True): # Card format
+    with st.container(border=True):
         if method == "Frequentist":
-            p_value = 0.04 if lift > 0 else 0.20  # Simulated logic
+            p_value = 0.04 if lift > 0 else 0.20
             if p_value < 0.05:
                 st.success(f"✅ Statistically significant improvement (p = {p_value:.2f}) — Recommend rollout.")
             else:
                 st.warning(f"⚠️ No statistical significance (p = {p_value:.2f}) — Further testing recommended.")
         else:
-            # Bayesian beta distribution simulation
             alpha_c = 1 + ab_df["Conversions"].iloc[0]
             beta_c = 1 + ab_df["Users"].iloc[0] - ab_df["Conversions"].iloc[0]
             alpha_v = 1 + ab_df["Conversions"].iloc[1]
@@ -371,7 +378,7 @@ with tab_ab_testing:
                 st.info("🟡 Moderate confidence. Consider more samples.")
 
     st.markdown("#### Power & Sample Size Calculator")
-    with st.container(border=True): # Card format
+    with st.container(border=True):
         alpha = st.slider("Significance Level (α)", 0.01, 0.10, 0.05, key="ab_alpha")
         power = st.slider("Power (1 - β)", 0.7, 0.99, 0.8, key="ab_power")
         base_rate = st.number_input("Baseline Conversion Rate (%)", value=10.0, key="ab_base_rate") / 100
@@ -381,7 +388,6 @@ with tab_ab_testing:
         z_beta = norm.ppf(power)
         pooled_rate = base_rate + min_detectable_effect / 2
         
-        # Handle division by zero if MDE is zero
         if min_detectable_effect == 0:
             sample_size = float('inf')
         else:
@@ -397,7 +403,7 @@ with tab_ml_insights:
     st.markdown("Explore churn and LTV predictions with explainability and version control.")
 
     st.markdown("#### Model Selection")
-    with st.container(border=True): # Card format
+    with st.container(border=True):
         model_type = st.radio("Select Model Type", ["Churn Prediction", "Lifetime Value (LTV)"], key="ml_model_type")
         model_version = st.selectbox("Model Version", ["v1.0", "v1.1", "v2.0"], key="ml_model_version")
         st.info(f"Showing insights for **{model_type}** model — version `{model_version}`")
@@ -405,7 +411,6 @@ with tab_ml_insights:
     show_metrics = st.checkbox("📈 Show Performance Metrics", value=True, key="ml_show_metrics")
     show_force = st.checkbox("⚡ Show SHAP Visualizations", value=False, key="ml_show_force")
 
-    # Simulated prediction data for ML Insights
     if model_type == "Churn Prediction":
         ml_df = pd.DataFrame({
             "Customer ID": [f"CUST-{i+1:03d}" for i in range(10)],
@@ -416,16 +421,19 @@ with tab_ml_insights:
             ]
         })
         st.subheader("📉 Predicted Churn Risk")
-        with st.container(border=True): # Card format
-            st.dataframe(ml_df, use_container_width=True)
+        with st.container(border=True):
+            col_ml_chart, col_ml_data = st.columns([2,1]) # Chart takes more space
+            with col_ml_chart:
+                fig_churn_ml = px.bar(ml_df, x="Customer ID", y="Churn Probability", color="Top SHAP Feature",
+                                    title="SHAP-Informed Churn Risk")
+                st.plotly_chart(fig_churn_ml, use_container_width=True)
+            with col_ml_data:
+                st.dataframe(ml_df, use_container_width=True)
 
-            fig_churn_ml = px.bar(ml_df, x="Customer ID", y="Churn Probability", color="Top SHAP Feature",
-                                title="SHAP-Informed Churn Risk")
-            st.plotly_chart(fig_churn_ml, use_container_width=True)
 
         if show_metrics:
             st.subheader("📊 Model Performance")
-            with st.container(border=True): # Card format
+            with st.container(border=True):
                 st.markdown("- Accuracy: **87.2%**")
                 st.markdown("- AUC-ROC: **0.91**")
                 st.markdown("- Precision: **0.78**, Recall: **0.74**")
@@ -440,54 +448,60 @@ with tab_ml_insights:
             ]
         })
         st.subheader("📈 Predicted Customer LTV")
-        with st.container(border=True): # Card format
-            st.dataframe(ml_df, use_container_width=True)
-
-            fig_ltv_ml = px.bar(ml_df, x="Customer ID", y="Predicted LTV ($)", color="Top SHAP Feature",
-                                title="SHAP-Informed LTV Predictions")
-            st.plotly_chart(fig_ltv_ml, use_container_width=True)
+        with st.container(border=True):
+            col_ml_chart, col_ml_data = st.columns([2,1]) # Chart takes more space
+            with col_ml_chart:
+                fig_ltv_ml = px.bar(ml_df, x="Customer ID", y="Predicted LTV ($)", color="Top SHAP Feature",
+                                    title="SHAP-Informed LTV Predictions")
+                st.plotly_chart(fig_ltv_ml, use_container_width=True)
+            with col_ml_data:
+                st.dataframe(ml_df, use_container_width=True)
 
         if show_metrics:
             st.subheader("📊 Model Performance")
-            with st.container(border=True): # Card format
+            with st.container(border=True):
                 st.markdown("- RMSE: **248.6**")
                 st.markdown("- R² Score: **0.76**")
 
     if show_force:
-        st.subheader("⚡ SHAP Force Plot (Simulated Sample)")
-        with st.container(border=True): # Card format
-            # This part uses simulated data for SHAP plots as per your original ML_Insights.py
-            background_data = np.random.rand(100, 5) # Dummy background data
+        st.subheader("⚡ SHAP Visualizations (Simulated)")
+        
+        # Ensure only one figure per st.pyplot call to avoid issues
+        col_waterfall, col_decision = st.columns(2)
+
+        with st.container(border=True): # Wrap all SHAP plots in one larger card
+            background_data = np.random.rand(100, 5)
             dummy_predict = lambda x: np.random.rand(x.shape[0])
             explainer_sim = shap.Explainer(dummy_predict, background_data)
-            shap_values_sim = explainer_sim(background_data[:1]) # Explain first sample
+            shap_values_sim = explainer_sim(background_data[:1])
 
+            st.markdown("##### Force Plot (Simulated Sample)")
             if hasattr(shap_values_sim, 'values') and shap_values_sim.values.size > 0:
                 shap.plots.force(shap_values_sim[0], matplotlib=True, show=False)
                 st.pyplot(bbox_inches="tight")
                 plt.clf()
             else:
                 st.info("Not enough SHAP values for Force Plot.")
+            
+            with col_waterfall:
+                st.markdown("##### Waterfall Plot (Simulated Sample)")
+                if hasattr(shap_values_sim, 'values') and shap_values_sim.values.size > 0:
+                    fig_waterfall_sim, ax_waterfall_sim = plt.subplots()
+                    shap.plots.waterfall(shap_values_sim[0], max_display=5, show=False)
+                    st.pyplot(fig_waterfall_sim)
+                    plt.clf()
+                else:
+                    st.info("Not enough SHAP values for Waterfall Plot.")
 
-        st.subheader("🧱 SHAP Waterfall Plot (Simulated Sample)")
-        with st.container(border=True): # Card format
-            if hasattr(shap_values_sim, 'values') and shap_values_sim.values.size > 0:
-                fig_waterfall_sim, ax_waterfall_sim = plt.subplots()
-                shap.plots.waterfall(shap_values_sim[0], max_display=5, show=False)
-                st.pyplot(fig_waterfall_sim)
-                plt.clf()
-            else:
-                st.info("Not enough SHAP values for Waterfall Plot.")
-
-        st.subheader("📌 SHAP Decision Plot (Simulated Sample)")
-        with st.container(border=True): # Card format
-            if hasattr(shap_values_sim, 'values') and shap_values_sim.values.shape[0] > 0:
-                fig_decision_sim, ax_decision_sim = plt.subplots()
-                shap.plots.decision(shap_values_sim[:3], show=False)
-                st.pyplot(fig_decision_sim)
-                plt.clf()
-            else:
-                st.info("Not enough SHAP values for Decision Plot.")
+            with col_decision:
+                st.markdown("##### Decision Plot (Simulated Sample)")
+                if hasattr(shap_values_sim, 'values') and shap_values_sim.values.shape[0] > 0:
+                    fig_decision_sim, ax_decision_sim = plt.subplots()
+                    shap.plots.decision(shap_values_sim[:3], show=False)
+                    st.pyplot(fig_decision_sim)
+                    plt.clf()
+                else:
+                    st.info("Not enough SHAP values for Decision Plot.")
 
 
 # --- Tab: Geographic (Enhanced with localized filter and consistent map display) ---
@@ -496,13 +510,12 @@ with tab_geographic:
     st.markdown("Analyze user distribution and conversion rates across different regions.")
 
     st.markdown("#### Map View Selection")
-    with st.container(border=True): # Card format
+    with st.container(border=True):
         geo_view_type = st.radio("Select View", ["US Localized", "Global"], key="geo_view_type")
 
     if geo_view_type == "US Localized":
         st.markdown("#### US Localized Geographic Usage Dashboard (Simulated Cities)")
-        with st.container(border=True): # Card format
-            # Simulated user location data (from original Geographic.py)
+        with st.container(border=True):
             geo_df_us = pd.DataFrame({
                 "City": ["San Francisco", "New York", "Austin", "Seattle", "Chicago", "Miami", "Denver"],
                 "Latitude": [37.7749, 40.7128, 30.2672, 47.6062, 41.8781, 25.7617, 39.7392],
@@ -519,13 +532,13 @@ with tab_geographic:
                 hover_name="City",
                 size_max=30,
                 zoom=3,
-                mapbox_style="carto-positron",  # modern clean theme
+                mapbox_style="carto-positron",
                 title="US City-Level Active Users"
             )
             st.plotly_chart(fig_geo_us, use_container_width=True)
     else: # Global View
         st.markdown("#### Global Regional Conversion Map (from Main Data - filtered)")
-        with st.container(border=True): # Card format
+        with st.container(border=True):
             if not df_main_filtered.empty:
                 geo_data_main = df_main_filtered.copy()
                 if 'region' in geo_data_main.columns:
@@ -542,16 +555,15 @@ with tab_geographic:
                     geo_data_main = geo_data_main.dropna(subset=['lat', 'lon'])
 
                     if not geo_data_main.empty:
-                        # Using scatter_mapbox for consistency with the US map, but still global projection
                         fig_map_global = px.scatter_mapbox(
                             geo_data_main,
                             lat="lat",
                             lon="lon",
                             color="conversion_rate",
                             size="conversion_rate",
-                            hover_name="display_name", # Use the friendly name for hover
-                            size_max=40, # Adjust size for global scale
-                            zoom=1, # Global zoom
+                            hover_name="display_name",
+                            size_max=40,
+                            zoom=1,
                             mapbox_style="carto-positron",
                             title="Global Conversion Rate by Region (Main Data)"
                         )
