@@ -1,0 +1,5 @@
+user_id,login_days,last_purchase_days,avg_session_length,premium_user,churn
+101,12,30,5.4,1,0
+102,3,90,2.1,0,1
+103,18,10,7.0,1,0
+104,5,70,3.3,0,1

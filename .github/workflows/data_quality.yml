@@ -1,0 +1,16 @@
+name: Data Quality Check
+
+on:
+  schedule:
+    - cron: "0 1 * * *"
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Run dbt tests
+      run: |
+        pip install dbt-core
+        dbt run
+        dbt test

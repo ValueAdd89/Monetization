@@ -1,0 +1,3 @@
+user_id,event_type,timestamp
+1,signup,2024-01-01
+2,purchase,2024-01-02

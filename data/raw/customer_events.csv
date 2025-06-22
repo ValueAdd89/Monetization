@@ -1,0 +1,5 @@
+user_id,event,timestamp,channel
+1,signup,2024-01-01,email
+2,trial_start,2024-01-02,ads
+3,conversion,2024-01-05,organic
+4,cancel,2024-01-10,email
