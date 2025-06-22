@@ -1,18 +1,21 @@
 import streamlit as st
+from pathlib import Path
 import pandas as pd
 import plotly.express as px
 import shap
-import matplotlib.pyplot as plt # Needed for plt.figure, plt.close
+import matplotlib.pyplot as plt
 import numpy as np
 import joblib
-from pathlib import Path
 
-# --- Page Configuration ---
 st.set_page_config(
     layout="wide",
     page_title="Telemetry Monetization Dashboard",
     page_icon="📊"
 )
+
+# --- ADD THIS LINE ---
+st.sidebar.write("Testing Sidebar Visibility")
+# --- END ADDITION ---
 
 st.title("📊 Telemetry Monetization Dashboard")
 st.markdown("Use this dashboard to explore pricing, performance, and predictions.")
@@ -20,55 +23,9 @@ st.markdown("---")
 
 # --- Sidebar Filters ---
 st.sidebar.header("🔍 Global Filters")
-
-# --- Load Data ---
-@st.cache_data
-def load_data():
-    base_path = Path(__file__).parent.parent / "data" / "processed"
-    
-    try:
-        df = pd.read_csv(base_path / "pricing_elasticity.csv")
-        funnel = pd.read_csv(base_path / "funnel_data.csv")
-        
-        # --- FIX: Ensure 'year' column exists or derive it ---
-        if 'date' in df.columns:
-            df['date'] = pd.to_datetime(df['date'], errors='coerce')
-            df['year'] = df['date'].dt.year # Derive year from a 'date' column
-            df = df.dropna(subset=['date']) # Drop rows where date conversion failed
-        elif 'window_start' in df.columns: # Alternative if data comes with window_start
-            df['window_start'] = pd.to_datetime(df['window_start'], errors='coerce')
-            df['year'] = df['window_start'].dt.year
-            df = df.dropna(subset=['window_start'])
-        else:
-            st.warning("Neither 'date' nor 'window_start' column found in pricing_elasticity.csv. Year filtering may be limited.")
-            df['year'] = pd.to_datetime('2024-01-01').year # Default year if no date column
-
-        # --- FIX: Ensure funnel_df has 'step_order' and 'count' and 'step' for default display ---
-        if 'step_order' not in funnel.columns or 'count' not in funnel.columns or 'step' not in funnel.columns:
-            st.warning("Funnel data CSV missing expected columns ('step_order', 'count', 'step'). Funnel analysis will be limited.")
-            funnel = pd.DataFrame(columns=['step_order', 'count', 'step']) # Create empty DF to prevent errors
-
-        return df, funnel
-    except FileNotFoundError as e:
-        st.error(f"Error: Data CSV files not found. Please ensure 'pricing_elasticity.csv' and 'funnel_data.csv' are in {base_path}")
-        st.stop()
-    except Exception as e:
-        st.error(f"An unexpected error occurred during data loading: {e}. Please check your CSV file contents and column names.")
-        st.stop()
-
-df, funnel_df_orig = load_data() # Rename funnel_df to funnel_df_orig as it will be filtered
-
-# Determine available years for the slider
-if not df.empty and 'year' in df.columns:
-    min_year = int(df['year'].min())
-    max_year = int(df['year'].max())
-    selected_year = st.sidebar.slider("Year", min_year, max_year, max_year)
-else:
-    min_year = 2021
-    max_year = 2024
-    selected_year = st.sidebar.slider("Year", 2021, 2024, 2024)
-    st.sidebar.warning("Year filter based on default range as year data is missing.")
-
+selected_plan = st.sidebar.selectbox("Pricing Plan", ["All", "Basic", "Pro", "Enterprise"])
+selected_region = st.sidebar.selectbox("Region", ["All", "North America", "Europe", "APAC", "LATAM"])
+selected_year = st.sidebar.slider("Year", 2021, 2024, 2024)
 
 # Determine available plans and regions
 if not df.empty:
