@@ -35,13 +35,16 @@ class DataQualityAssessment:
 
             clean_name = clean_name.strip('_')
 
-            if name_mapping:
-                self.df = self.df.rename(columns=name_mapping)
-                self.cleaning_log.append({
-                    'step': 'Column name standardization',
-                    'changes': len(name_mapping),
-                    'description': f'Converted {len(name_mapping)} column names to snake_case'
-                })
+            if col != clean_name: # Only add to mapping if a change occurred
+                name_mapping[col] = clean_name
+
+        if name_mapping:
+            self.df = self.df.rename(columns=name_mapping)
+            self.cleaning_log.append({
+                'step': 'Column name standardization',
+                'changes': len(name_mapping),
+                'description': f'Converted {len(name_mapping)} column names to snake_case'
+            })
         return self.df
 
     def handle_missing_values(self, strategy='intelligent'):
@@ -195,12 +198,6 @@ class DataQualityAssessment:
         }
         return report
 
-# You need to define EnterpriseDataCleaner and its methods
-# For the purpose of this fix, I'll assume EnterpriseDataCleaner
-# is either the same as DataQualityAssessment or a subclass of it
-# with the added generate_quality_report method.
-# If not, you'll need to define it or adapt the calls in tab_data_quality.
-
 class EnterpriseDataCleaner(DataQualityAssessment):
     """
     Extends DataQualityAssessment to include a simplified quality report
@@ -340,7 +337,7 @@ def create_messy_demo_dataset():
 
 st.set_page_config(
     layout="wide",
-    page_title="Telemetry Monetization Dashboard", # Changed page_title
+    page_title="Telemetry Monetization Dashboard",
     page_icon="💰"
 )
 
@@ -364,7 +361,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("Telemetry Monetization Dashboard") # Changed st.title
+st.title("Telemetry Monetization Dashboard")
 st.markdown("This dashboard provides a concise overview of key monetization metrics and data quality insights.")
 st.markdown("---")
 
@@ -372,7 +369,6 @@ st.markdown("---")
 st.sidebar.header("🔍 Global Filters")
 selected_plan_global = st.sidebar.selectbox("Pricing Plan", ["All", "Basic", "Pro", "Enterprise"], key="global_plan")
 selected_region_global = st.sidebar.selectbox("Region", ["All", "North America", "Europe", "APAC", "LATAM"], key="global_region")
-# Filter order matched to screenshot
 customer_segments = ["All", "Small Business", "Mid-Market", "Enterprise"]
 selected_segment_global = st.sidebar.selectbox("Customer Segment", customer_segments, key="global_segment")
 selected_year_global = st.sidebar.slider("Year", 2021, 2024, 2024, key="global_year")
@@ -444,16 +440,13 @@ def load_main_data():
             funnel_main_loaded = pd.DataFrame(dummy_funnel_data)
             
     except Exception as e:
-        # Catch any loading errors and provide empty dataframes
-        # The specific warning message from the file loading will NOT be shown to the user.
-        # This is for robust error handling without cluttering the UI with internal messages.
         st.error(f"An unexpected error occurred during data loading: {e}. Displaying limited dummy data.")
         df_main_loaded = pd.DataFrame({'plan': [], 'region': [], 'year': [], 'elasticity': [], 'conversion_rate': [], 'customer_segment': [], 'monthly_revenue': []})
         funnel_main_loaded = pd.DataFrame({'step': [], 'step_order': [], 'count': [], 'region': [], 'plan': [], 'year': [], 'customer_segment': []})
     
     return df_main_loaded, funnel_main_loaded
 
-df_main, funnel_df_main = load_main_data()
+df_main, funnel_df_original = load_main_data() # Renamed to funnel_df_original for clarity
 
 # Apply global filters to main data
 df_main_filtered = df_main.copy()
@@ -471,8 +464,10 @@ if 'monthly_revenue' in df_main_filtered.columns:
         (df_main_filtered["monthly_revenue"] <= selected_revenue_range_global[1])
     ]
 
-# Apply global filters to funnel data BEFORE populating funnel-specific selectboxes
-funnel_df_globally_filtered = funnel_df_main.copy()
+
+# --- CRITICAL CHANGE: Apply ALL global filters to the funnel data
+funnel_df_globally_filtered = funnel_df_original.copy()
+
 if selected_plan_global != "All" and 'plan' in funnel_df_globally_filtered.columns:
     funnel_df_globally_filtered = funnel_df_globally_filtered[funnel_df_globally_filtered["plan"] == selected_plan_global]
 if selected_region_global != "All" and 'region' in funnel_df_globally_filtered.columns:
@@ -481,6 +476,9 @@ if selected_segment_global != "All" and 'customer_segment' in funnel_df_globally
     funnel_df_globally_filtered = funnel_df_globally_filtered[funnel_df_globally_filtered["customer_segment"] == selected_segment_global]
 if 'year' in funnel_df_globally_filtered.columns:
     funnel_df_globally_filtered = funnel_df_globally_filtered[funnel_df_globally_filtered["year"] == selected_year_global]
+
+# Note: The revenue range global filter isn't directly applicable to the funnel_df as it doesn't have 'monthly_revenue'
+# If it did, you'd apply it here too.
 
 
 def kpi_color(value, thresholds):
@@ -555,55 +553,74 @@ with tab_funnel:
     st.markdown("#### Funnel Filters")
     with st.container(border=True):
         col_f1, col_f2, col_f3, col_f4 = st.columns(4)
-
-        # ✅ Always get options from raw funnel_df_main (NOT globally filtered)
         with col_f1:
-            plan_options = ["All"] + sorted(funnel_df_main['plan'].dropna().unique().tolist()) if 'plan' in funnel_df_main.columns else ["All"]
+            # Populate options from the globally filtered funnel data
+            plan_options = ["All"] + sorted(funnel_df_globally_filtered['plan'].dropna().unique().tolist()) if 'plan' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['plan'].empty else ["All"]
             funnel_plan = st.selectbox("Plan", plan_options, key="funnel_plan")
-
         with col_f2:
-            region_options = ["All"] + sorted(funnel_df_main['region'].dropna().unique().tolist()) if 'region' in funnel_df_main.columns else ["All"]
+            # Populate options from the globally filtered funnel data
+            region_options = ["All"] + sorted(funnel_df_globally_filtered['region'].dropna().unique().tolist()) if 'region' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['region'].empty else ["All"]
             funnel_region = st.selectbox("Region", region_options, key="funnel_region")
-
         with col_f3:
-            segment_options_funnel = ["All"] + sorted(funnel_df_main['customer_segment'].dropna().unique().tolist()) if 'customer_segment' in funnel_df_main.columns else ["All"]
+            # Populate options from the globally filtered funnel data
+            segment_options_funnel = ["All"] + sorted(funnel_df_globally_filtered['customer_segment'].dropna().unique().tolist()) if 'customer_segment' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['customer_segment'].empty else ["All"]
             funnel_segment = st.selectbox("Customer Segment", segment_options_funnel, key="funnel_segment")
-
-        with col_f4:
-            if 'year' in funnel_df_main.columns:
-                min_year_funnel = int(funnel_df_main['year'].min())
-                max_year_funnel = int(funnel_df_main['year'].max())
+        with col_f4: # Year slider moved to after dropdowns
+            # Safely determine min/max year for the funnel slider
+            if 'year' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['year'].empty:
+                min_year_funnel = int(funnel_df_globally_filtered['year'].min())
+                max_year_funnel = int(funnel_df_globally_filtered['year'].max())
+                # Ensure the default value is within the valid range
                 default_year_funnel = max(min_year_funnel, min(max_year_funnel, selected_year_global))
             else:
-                min_year_funnel = 2021
-                max_year_funnel = 2024
-                default_year_funnel = selected_year_global
-            funnel_year = st.slider("Year", min_year_funnel, max_year_funnel, default_year_funnel, key="funnel_year")
+                # Fallback if no year data is present after global filtering
+                min_year_funnel = selected_year_global
+                max_year_funnel = selected_year_global
+                default_year_funnel = selected_year_global # Use global default, assuming it's a valid year
 
-    # ✅ Apply funnel-level filters on top of globally filtered funnel data
+            # If min_year_funnel and max_year_funnel are the same, make it a selectbox for a single year or disable
+            if min_year_funnel == max_year_funnel:
+                funnel_year = st.selectbox("Year", [min_year_funnel], key="funnel_year_single")
+            else:
+                funnel_year = st.slider("Year", min_year_funnel, max_year_funnel, default_year_funnel, key="funnel_year_range")
+
+
+    # Apply funnel-specific filters on top of the already globally filtered funnel data
+    # (These will likely be redundant if we fully filter funnel_df_globally_filtered,
+    # but kept for explicit clarity that these *could* further refine if desired)
     funnel_df_filtered = funnel_df_globally_filtered.copy()
 
+    # Ensure columns exist and the selected value is not "All" before filtering
     if 'plan' in funnel_df_filtered.columns and funnel_plan != "All":
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["plan"] == funnel_plan]
     if 'region' in funnel_df_filtered.columns and funnel_region != "All":
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["region"] == funnel_region]
-    if 'year' in funnel_df_filtered.columns:
+    if 'year' in funnel_df_filtered.columns: # Year filter is always applied if column exists
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["year"] == funnel_year]
     if 'customer_segment' in funnel_df_filtered.columns and funnel_segment != "All":
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["customer_segment"] == funnel_segment]
 
+
     st.markdown("#### User Journey Funnel Drop-Off")
     with st.container(border=True):
         if not funnel_df_filtered.empty:
-            funnel_aggregated = funnel_df_filtered.groupby(['step', 'step_order']).agg({'count': 'sum'}).reset_index()
-            funnel_df_sorted = funnel_aggregated.sort_values(by="step_order", ascending=True)
-            fig_funnel = px.funnel(
-                funnel_df_sorted,
-                x="count",
-                y="step",
-                title="User Journey Funnel Drop-Off"
-            )
-            st.plotly_chart(fig_funnel, use_container_width=True)
+            if 'step' in funnel_df_filtered.columns and 'count' in funnel_df_filtered.columns:
+                funnel_aggregated = funnel_df_filtered.groupby(['step', 'step_order']).agg({'count': 'sum'}).reset_index()
+                if 'step_order' in funnel_aggregated.columns:
+                    funnel_df_sorted = funnel_aggregated.sort_values(by="step_order", ascending=True)
+                else:
+                    st.warning("Column 'step_order' not found in funnel data, chart may not be sorted correctly.")
+                    funnel_df_sorted = funnel_aggregated
+
+                fig_funnel = px.funnel(
+                    funnel_df_sorted,
+                    x="count",
+                    y="step",
+                    title="User Journey Funnel Drop-Off"
+                )
+                st.plotly_chart(fig_funnel, use_container_width=True)
+            else:
+                st.info("Required columns 'step' or 'count' not found in filtered funnel data for chart.")
         else:
             st.info("Funnel data is not available for the selected filters.")
 
@@ -611,18 +628,21 @@ with tab_funnel:
         st.markdown("#### Conversion Rates Between Steps")
         with st.container(border=True):
             funnel_conversion = funnel_df_filtered.groupby(['step', 'step_order']).agg({'count': 'sum'}).reset_index().sort_values('step_order')
-
+            
             if len(funnel_conversion) > 1:
                 conversion_rates = []
                 for i in range(1, len(funnel_conversion)):
                     current_count = funnel_conversion.iloc[i]['count']
-                    previous_count = funnel_conversion.iloc[i - 1]['count']
-                    conversion_rate = (current_count / previous_count) * 100 if previous_count > 0 else 0
+                    previous_count = funnel_conversion.iloc[i-1]['count']
+                    if previous_count > 0:
+                        conversion_rate = (current_count / previous_count) * 100
+                    else:
+                        conversion_rate = 0
                     conversion_rates.append({
-                        'From': funnel_conversion.iloc[i - 1]['step'],
+                        'From': funnel_conversion.iloc[i-1]['step'],
                         'To': funnel_conversion.iloc[i]['step'],
                         'Conversion Rate': f"{conversion_rate:.1f}%",
-                        'Drop-off Rate': f"{100 - conversion_rate:.1f}%"
+                        'Drop-off Rate': f"{100-conversion_rate:.1f}%"
                     })
                 conversion_df = pd.DataFrame(conversion_rates)
                 st.dataframe(conversion_df, use_container_width=True)
@@ -938,7 +958,7 @@ with tab_data_quality:
 
             st.markdown("### 📊 Data Quality Assessment Report")
 
-            quality_assessor = DataQualityAssessment(df_upload, uploaded_file.name)
+            quality_assessor = EnterpriseDataCleaner(df_upload, uploaded_file.name) # Use EnterpriseDataCleaner
             quality_report = quality_assessor.generate_quality_report()
 
             col_score, col_summary = st.columns([1, 2])
@@ -1030,7 +1050,7 @@ with tab_data_quality:
             st.markdown("**Generated messy dataset with common real-world issues (first 5 rows):**")
             st.dataframe(messy_data.head(), use_container_width=True)
 
-            quality_assessor = DataQualityAssessment(messy_data, "Demo Dataset")
+            quality_assessor = EnterpriseDataCleaner(messy_data, "Demo Dataset")
             quality_report = quality_assessor.generate_quality_report()
 
             col_demo_score, col_demo_issues = st.columns(2)
@@ -1148,4 +1168,4 @@ with tab_executive_summary:
     st.dataframe(kpi_chart_data, use_container_width=True)
 
     st.markdown("---")
-    st.markdown("*This dashboard provides actionable insights to drive significant revenue optimization through data-driven strategies.*")
+    st.markdown("*This simplified dashboard provides actionable insights to drive significant revenue optimization through data-driven strategies.*")
