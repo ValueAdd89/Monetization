@@ -764,24 +764,58 @@ with tab_funnel:
     with st.container(border=True):
         if not funnel_df_filtered.empty:
             if 'step' in funnel_df_filtered.columns and 'count' in funnel_df_filtered.columns:
-                if 'step_order' in funnel_df_filtered.columns:
-                    funnel_df_sorted = funnel_df_filtered.sort_values(by="step_order", ascending=True)
-                else:
-                    st.warning("Column 'step_order' not found, funnel chart may not be sorted correctly.")
-                    funnel_df_sorted = funnel_df_filtered
-
-                fig_funnel = px.funnel(
-                    funnel_df_sorted,
-                    x="count",
-                    y="step",
-                    title="User Journey Funnel Drop-Off"
-                )
-                st.plotly_chart(fig_funnel, use_container_width=True)
+                # Aggregate counts by step for the selected filters
+                funnel_aggregated = funnel_df_filtered.groupby(['step', 'step_order']).agg({
+                    'count': 'sum'
+                }).reset_index()
+        
+            # Sort by step_order to ensure proper funnel flow
+            if 'step_order' in funnel_aggregated.columns:
+                funnel_df_sorted = funnel_aggregated.sort_values(by="step_order", ascending=True)
             else:
-                st.info("Required columns 'step' or 'count' not found in filtered funnel data for chart.")
-        else:
-            st.info("Funnel data is not available for the selected filters.")
+                st.warning("Column 'step_order' not found, funnel chart may not be sorted correctly.")
+                funnel_df_sorted = funnel_aggregated
 
+            fig_funnel = px.funnel(
+                funnel_df_sorted,
+                x="count",
+                y="step",
+                title="User Journey Funnel Drop-Off"
+            )
+            st.plotly_chart(fig_funnel, use_container_width=True)
+        else:
+            st.info("Required columns 'step' or 'count' not found in filtered funnel data for chart.")
+    else:
+        st.info("Funnel data is not available for the selected filters.")
+
+# Add funnel conversion rate analysis
+if not funnel_df_filtered.empty and 'step' in funnel_df_filtered.columns:
+    st.markdown("#### Conversion Rates Between Steps")
+    with st.container(border=True):
+        funnel_conversion = funnel_df_filtered.groupby(['step', 'step_order']).agg({
+            'count': 'sum'
+        }).reset_index().sort_values('step_order')
+        
+        if len(funnel_conversion) > 1:
+            conversion_rates = []
+            for i in range(1, len(funnel_conversion)):
+                current_count = funnel_conversion.iloc[i]['count']
+                previous_count = funnel_conversion.iloc[i-1]['count']
+                if previous_count > 0:
+                    conversion_rate = (current_count / previous_count) * 100
+                else:
+                    conversion_rate = 0
+                conversion_rates.append({
+                    'From': funnel_conversion.iloc[i-1]['step'],
+                    'To': funnel_conversion.iloc[i]['step'],
+                    'Conversion Rate': f"{conversion_rate:.1f}%",
+                    'Drop-off Rate': f"{100-conversion_rate:.1f}%"
+                })
+            
+            conversion_df = pd.DataFrame(conversion_rates)
+            st.dataframe(conversion_df, use_container_width=True)
+        else:
+            st.info("Not enough funnel steps to calculate conversion rates.")
     st.markdown("#### Raw Funnel Data")
     with st.container(border=True):
         st.dataframe(funnel_df_filtered, use_container_width=True)
