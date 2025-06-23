@@ -198,6 +198,98 @@ class DataQualityAssessment:
         }
         return report
 
+# You need to define EnterpriseDataCleaner and its methods
+# For the purpose of this fix, I'll assume EnterpriseDataCleaner
+# is either the same as DataQualityAssessment or a subclass of it
+# with the added generate_quality_report method.
+# If not, you'll need to define it or adapt the calls in tab_data_quality.
+
+class EnterpriseDataCleaner(DataQualityAssessment):
+    """
+    Extends DataQualityAssessment to include a simplified quality report
+    for demonstration purposes. In a real scenario, this would be more detailed.
+    """
+    def generate_quality_report(self):
+        report = {}
+        # Completeness
+        completeness_data = {}
+        for col in self.df.columns:
+            missing_count = self.df[col].isnull().sum()
+            total_count = len(self.df)
+            missing_percentage = (missing_count / total_count * 100) if total_count > 0 else 0
+            completeness_score = 100 - missing_percentage
+            completeness_data[col] = {
+                'missing_count': missing_count,
+                'missing_percentage': missing_percentage,
+                'completeness_score': completeness_score
+            }
+        report['completeness'] = completeness_data
+
+        # Duplicates
+        total_duplicates = self.df.duplicated().sum()
+        report['duplicates'] = {
+            'total_duplicates': total_duplicates,
+            'duplicate_rows': self.df[self.df.duplicated(keep=False)] # show all duplicates
+        }
+
+        # Consistency (simplified: check for mixed types, but actual consistency is complex)
+        consistency_issues = []
+        for col in self.df.columns:
+            if pd.api.types.is_object_dtype(self.df[col]):
+                # Check for inconsistent casing if string
+                if self.df[col].astype(str).str.lower().nunique() < self.df[col].nunique():
+                    consistency_issues.append({
+                        'column': col,
+                        'issue': 'Inconsistent Casing',
+                        'description': f"Column '{col}' has values with inconsistent casing (e.g., 'Basic' vs 'basic')."
+                    })
+            elif pd.api.types.is_numeric_dtype(self.df[col]):
+                # Check for values that might be entered as text but should be numeric
+                if self.df[col].apply(lambda x: isinstance(x, str) and not x.replace('.', '', 1).isdigit() and not x.replace('-', '', 1).isdigit()).any():
+                     consistency_issues.append({
+                        'column': col,
+                        'issue': 'Mixed Types/Invalid Numeric Strings',
+                        'description': f"Column '{col}' contains non-numeric strings that should be numeric."
+                    })
+        report['consistency'] = consistency_issues
+
+        # Validity (simplified: check for common range issues for rates/revenues)
+        validity_issues = []
+        for col in self.df.columns:
+            if 'conversion_rate' in col.lower() and pd.api.types.is_numeric_dtype(self.df[col]):
+                invalid_rates = self.df[(self.df[col] < 0) | (self.df[col] > 1.05)] # Allow slightly over 1 for common data entry errors like 100% vs 1.0
+                if not invalid_rates.empty:
+                    validity_issues.append({
+                        'column': col,
+                        'issue': 'Invalid Conversion Rate',
+                        'description': f"Column '{col}' contains conversion rates outside the 0-1 (or 0-100%) range.",
+                        'count': len(invalid_rates)
+                    })
+            if ('revenue' in col.lower() or 'price' in col.lower() or 'amount' in col.lower()) and pd.api.types.is_numeric_dtype(self.df[col]):
+                negative_values = self.df[self.df[col] < 0]
+                if not negative_values.empty:
+                    validity_issues.append({
+                        'column': col,
+                        'issue': 'Negative Financial Value',
+                        'description': f"Column '{col}' contains negative financial values.",
+                        'count': len(negative_values)
+                    })
+        report['validity'] = validity_issues
+
+        # Overall Score (simple calculation for demo)
+        completeness_score_sum = sum(v['completeness_score'] for v in completeness_data.values())
+        completeness_score_avg = completeness_score_sum / len(completeness_data) if completeness_data else 100
+
+        consistency_deduction = len(consistency_issues) * 5 # Each issue deducts 5 points
+        validity_deduction = len(validity_issues) * 7 # Each issue deducts 7 points
+        duplicate_deduction = (total_duplicates / len(self.df) * 100) if len(self.df) > 0 else 0
+        duplicate_deduction = min(duplicate_deduction, 20) # Cap duplicate deduction at 20 points
+
+        overall_score = completeness_score_avg - consistency_deduction - validity_deduction - duplicate_deduction
+        report['overall_score'] = max(0, int(overall_score)) # Ensure score is not negative
+
+        return report
+
 # === STREAMLIT INTEGRATION FOR DATA QUALITY DEMONSTRATION FUNCTIONS ===
 
 def create_messy_demo_dataset():
@@ -382,6 +474,18 @@ if 'monthly_revenue' in df_main_filtered.columns:
         (df_main_filtered["monthly_revenue"] <= selected_revenue_range_global[1])
     ]
 
+# Apply global filters to funnel data BEFORE populating funnel-specific selectboxes
+funnel_df_globally_filtered = funnel_df_main.copy()
+if selected_plan_global != "All" and 'plan' in funnel_df_globally_filtered.columns:
+    funnel_df_globally_filtered = funnel_df_globally_filtered[funnel_df_globally_filtered["plan"] == selected_plan_global]
+if selected_region_global != "All" and 'region' in funnel_df_globally_filtered.columns:
+    funnel_df_globally_filtered = funnel_df_globally_filtered[funnel_df_globally_filtered["region"] == selected_region_global]
+if selected_segment_global != "All" and 'customer_segment' in funnel_df_globally_filtered.columns:
+    funnel_df_globally_filtered = funnel_df_globally_filtered[funnel_df_globally_filtered["customer_segment"] == selected_segment_global]
+if 'year' in funnel_df_globally_filtered.columns:
+    funnel_df_globally_filtered = funnel_df_globally_filtered[funnel_df_globally_filtered["year"] == selected_year_global]
+
+
 def kpi_color(value, thresholds):
     if not isinstance(value, (int, float)):
         return "⚪"
@@ -455,28 +559,27 @@ with tab_funnel:
     with st.container(border=True):
         col_f1, col_f2, col_f3, col_f4 = st.columns(4)
         with col_f1:
-            # Ensure plan_options are drawn from the full funnel_df_main
-            plan_options = ["All"] + sorted(funnel_df_main['plan'].dropna().unique().tolist()) if 'plan' in funnel_df_main.columns and not funnel_df_main['plan'].empty else ["All"]
+            # Populate options from the globally filtered funnel data
+            plan_options = ["All"] + sorted(funnel_df_globally_filtered['plan'].dropna().unique().tolist()) if 'plan' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['plan'].empty else ["All"]
             funnel_plan = st.selectbox("Plan", plan_options, key="funnel_plan")
         with col_f2:
-            # Ensure region_options are drawn from the full funnel_df_main
-            region_options = ["All"] + sorted(funnel_df_main['region'].dropna().unique().tolist()) if 'region' in funnel_df_main.columns and not funnel_df_main['region'].empty else ["All"]
+            # Populate options from the globally filtered funnel data
+            region_options = ["All"] + sorted(funnel_df_globally_filtered['region'].dropna().unique().tolist()) if 'region' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['region'].empty else ["All"]
             funnel_region = st.selectbox("Region", region_options, key="funnel_region")
         with col_f3:
-            # Ensure segment_options_funnel are drawn from the full funnel_df_main
-            segment_options_funnel = ["All"] + sorted(funnel_df_main['customer_segment'].dropna().unique().tolist()) if 'customer_segment' in funnel_df_main.columns and not funnel_df_main['customer_segment'].empty else ["All"]
+            # Populate options from the globally filtered funnel data
+            segment_options_funnel = ["All"] + sorted(funnel_df_globally_filtered['customer_segment'].dropna().unique().tolist()) if 'customer_segment' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['customer_segment'].empty else ["All"]
             funnel_segment = st.selectbox("Customer Segment", segment_options_funnel, key="funnel_segment")
         with col_f4: # Year slider moved to after dropdowns
-            # Ensure year min/max are valid from funnel_df_main, default if empty
-            if 'year' in funnel_df_main.columns and not funnel_df_main['year'].empty:
-                min_year = int(funnel_df_main['year'].min())
-                max_year = int(funnel_df_main['year'].max())
-            else:
-                min_year = 2021
-                max_year = 2024
-            funnel_year = st.slider("Year", min_year, max_year, max_year, key="funnel_year")
+            # Use global year for funnel tab, as it's already filtered globally
+            # If you want a separate year filter for funnel, make sure to get min/max from funnel_df_globally_filtered
+            # For consistency with global filters, we'll keep this aligned with selected_year_global initially
+            funnel_year = st.slider("Year", selected_year_global, selected_year_global, selected_year_global, key="funnel_year")
 
-    funnel_df_filtered = funnel_df_main.copy()
+
+    # Apply funnel-specific filters on top of the already globally filtered funnel data
+    funnel_df_filtered = funnel_df_globally_filtered.copy()
+
     # Ensure columns exist and the selected value is not "All" before filtering
     if 'plan' in funnel_df_filtered.columns and funnel_plan != "All":
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["plan"] == funnel_plan]
@@ -695,7 +798,7 @@ with tab_ab_testing:
             st.success(f"✅ Statistically significant improvement (p = {p_value:.2f}) — Recommend rollout.")
         else:
             st.warning(f"⚠️ No statistical significance (p = {p_value:.2f}) — Further testing recommended.")
-        
+            
         alpha_val = st.slider("Significance Level (α)", 0.01, 0.10, 0.05, key="ab_alpha_simple")
         power_val = st.slider("Power (1 - β)", 0.7, 0.99, 0.8, key="ab_power_simple")
         base_rate = st.number_input("Baseline Conversion Rate (%)", value=10.0, key="ab_base_rate_simple") / 100
