@@ -1071,11 +1071,14 @@ with tab_pricing:
                     best_plan, worst_plan, best_ratio_val, worst_ratio_val = "N/A", "N/A", "N/A", "N/A"
             else:
                 best_plan, worst_plan, best_ratio_val, worst_ratio_val = "N/A", "N/A", "N/A", "N/A"
-
+                # Format ratio values safely
+            best_ratio_display = f"{best_ratio_val:.1f}x" if isinstance(best_ratio_val, (int, float)) else str(best_ratio_val)
+            worst_ratio_display = f"{worst_ratio_val:.1f}x" if isinstance(worst_ratio_val, (int, float)) else str(worst_ratio_val)
+            
             st.markdown(f"""
             **Unit Economics Analysis:**
-            - **Best performing plan**: {best_plan} (LTV/CAC: {best_ratio_val:.1f}}x if isinstance(best_ratio_val, (int, float)) else str(best_ratio_val)})
-            - **Needs improvement**: {worst_plan} (LTV/CAC: {worst_ratio_val:.1f}}x if isinstance(worst_ratio_val, (int, float)) else str(worst_ratio_val)})
+            - **Best performing plan**: {best_plan} (LTV/CAC: {best_ratio_display})
+            - **Needs improvement**: {worst_plan} (LTV/CAC: {worst_ratio_display})
             - **Target**: LTV/CAC ratio should be >3x for healthy unit economics
             
             **Strategic Recommendations:**
