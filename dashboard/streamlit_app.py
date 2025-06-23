@@ -548,6 +548,7 @@ tab_overview, tab_funnel, tab_pricing, tab_ab_testing, tab_geographic, tab_data_
 ])
 
 # --- Tab: Overview ---
+# --- Tab: Overview ---
 with tab_overview:
     st.header("📈 Overview")
     st.markdown("This section provides a high-level view of monetization performance.")
@@ -582,7 +583,10 @@ with tab_overview:
         })
         with col_mrr:
             fig_mrr = px.bar(overview_data, x="Month", y="MRR", title="Monthly Recurring Revenue")
-            st.plotly_chart(fig_churn, use_container_width=True)
+            st.plotly_chart(fig_mrr, use_container_width=True) # Changed from fig_churn to fig_mrr
+        with col_churn: # This block defines fig_churn
+            fig_churn = px.line(overview_data, x="Month", y="Churn Rate", title="Churn Rate Over Time")
+            st.plotly_chart(fig_churn, use_container_width=True) # Now fig_churn is defined
 
     st.markdown("#### Filtered Raw Data Sample")
     with st.container(border=True):
