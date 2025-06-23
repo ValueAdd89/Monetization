@@ -426,6 +426,12 @@ selected_plan_global = st.sidebar.selectbox("Pricing Plan", ["All", "Basic", "Pr
 selected_region_global = st.sidebar.selectbox("Region", ["All", "North America", "Europe", "APAC", "LATAM"], key="global_region")
 selected_year_global = st.sidebar.slider("Year", 2021, 2024, 2024, key="global_year")
 
+# Additional global filters
+customer_segments = ["All", "Small Business", "Mid-Market", "Enterprise"]
+selected_segment_global = st.sidebar.selectbox("Customer Segment", customer_segments, key="global_segment")
+selected_revenue_range_global = st.sidebar.slider("Monthly Revenue Range ($)", 0, 1000, (0, 1000), key="global_revenue_range")
+
+
 # --- Data Loading Function ---
 @st.cache_data
 def load_main_data():
@@ -442,14 +448,17 @@ def load_main_data():
         if funnel_data_path.exists():
             funnel_main_loaded = pd.read_csv(funnel_data_path)
 
+        # --- ENSURE DEMO COLUMNS EXIST FOR FILTERING AND CALCULATIONS ---
         if df_main_loaded.empty or 'plan' not in df_main_loaded.columns:
             st.warning(f"'{pricing_elasticity_path}' not found or empty/missing 'plan' column. Generating dummy pricing data.")
             dummy_data = {
-                'plan': np.random.choice(['Basic', 'Pro', 'Enterprise'], 100),
-                'region': np.random.choice(['North America', 'Europe', 'APAC', 'LATAM'], 100),
-                'year': np.random.choice([2021, 2022, 2023, 2024], 100),
-                'elasticity': np.random.uniform(0.3, 1.5, 100).round(2),
-                'conversion_rate': np.random.uniform(0.05, 0.30, 100).round(2)
+                'plan': np.random.choice(['Basic', 'Pro', 'Enterprise'], 200), # Increased records for better simulation
+                'region': np.random.choice(['North America', 'Europe', 'APAC', 'LATAM'], 200),
+                'year': np.random.choice([2021, 2022, 2023, 2024], 200),
+                'elasticity': np.random.uniform(0.3, 1.5, 200).round(2),
+                'conversion_rate': np.random.uniform(0.05, 0.30, 200).round(2),
+                'customer_segment': np.random.choice(customer_segments[1:], 200), # Exclude 'All'
+                'monthly_revenue': np.random.uniform(20, 900, 200).round(2)
             }
             df_main_loaded = pd.DataFrame(dummy_data)
 
@@ -461,47 +470,50 @@ def load_main_data():
             plans = ["Basic", "Pro", "Enterprise"]
             regions = ["North America", "Europe", "APAC", "LATAM"]
             years = [2021, 2022, 2023, 2024]
+            segments = customer_segments[1:] # Exclude 'All'
             
             dummy_funnel_data = []
             for plan in plans:
                 for region in regions:
                     for year in years:
-                        if plan == "Basic":
-                            base_counts = [10000, 4000, 2000, 800, 400]
-                        elif plan == "Pro":
-                            base_counts = [8000, 5500, 3200, 1800, 1200]
-                        else:
-                            base_counts = [3000, 2400, 2000, 1600, 1400]
-                        
-                        region_multiplier = {
-                            "North America": 1.2, "Europe": 1.0, "APAC": 0.8, "LATAM": 0.6
-                        }
-                        year_multiplier = {
-                            2021: 0.8, 2022: 0.9, 2023: 1.0, 2024: 1.1
-                        }
-                        
-                        multiplier = region_multiplier[region] * year_multiplier[year]
-                        adjusted_counts = [int(count * multiplier) for count in base_counts]
-                        
-                        for i, (step, count) in enumerate(zip(steps, adjusted_counts)):
-                            dummy_funnel_data.append({
-                                'step': step, 'step_order': i, 'count': count,
-                                'plan': plan, 'region': region, 'year': year
-                            })
+                        for segment in segments: # Add segment to funnel data
+                            # Different conversion patterns by plan type
+                            if plan == "Basic":
+                                base_counts = [10000, 4000, 2000, 800, 400]
+                            elif plan == "Pro":
+                                base_counts = [8000, 5500, 3200, 1800, 1200]
+                            else: # Enterprise
+                                base_counts = [3000, 2400, 2000, 1600, 1400]
+                            
+                            # Add some variation by region, year, and segment
+                            region_multiplier = {"North America": 1.2, "Europe": 1.0, "APAC": 0.8, "LATAM": 0.6}
+                            year_multiplier = {2021: 0.8, 2022: 0.9, 2023: 1.0, 2024: 1.1}
+                            segment_multiplier = {"Small Business": 0.9, "Mid-Market": 1.0, "Enterprise": 1.1}
+                            
+                            multiplier = region_multiplier[region] * year_multiplier[year] * segment_multiplier[segment]
+                            adjusted_counts = [int(count * multiplier) for count in base_counts]
+                            
+                            for i, (step, count) in enumerate(zip(steps, adjusted_counts)):
+                                dummy_funnel_data.append({
+                                    'step': step, 'step_order': i, 'count': count,
+                                    'plan': plan, 'region': region, 'year': year,
+                                    'customer_segment': segment # Add segment
+                                })
             funnel_main_loaded = pd.DataFrame(dummy_funnel_data)
             
     except pd.errors.EmptyDataError:
         st.error("One or both main CSV files are empty. Please check their content.")
-        df_main_loaded = pd.DataFrame({'plan': [], 'region': [], 'year': [], 'elasticity': [], 'conversion_rate': []})
-        funnel_main_loaded = pd.DataFrame({'step': [], 'step_order': [], 'count': [], 'region': [], 'plan': [], 'year': []})
+        df_main_loaded = pd.DataFrame({'plan': [], 'region': [], 'year': [], 'elasticity': [], 'conversion_rate': [], 'customer_segment': [], 'monthly_revenue': []})
+        funnel_main_loaded = pd.DataFrame({'step': [], 'step_order': [], 'count': [], 'region': [], 'plan': [], 'year': [], 'customer_segment': []})
     except Exception as e:
         st.error(f"An unexpected error occurred during data loading: {e}")
-        df_main_loaded = pd.DataFrame({'plan': [], 'region': [], 'year': [], 'elasticity': [], 'conversion_rate': []})
-        funnel_main_loaded = pd.DataFrame({'step': [], 'step_order': [], 'count': [], 'region': [], 'plan': [], 'year': []})
+        df_main_loaded = pd.DataFrame({'plan': [], 'region': [], 'year': [], 'elasticity': [], 'conversion_rate': [], 'customer_segment': [], 'monthly_revenue': []})
+        funnel_main_loaded = pd.DataFrame({'step': [], 'step_order': [], 'count': [], 'region': [], 'plan': [], 'year': [], 'customer_segment': []})
     return df_main_loaded, funnel_main_loaded
 
 df_main, funnel_df_main = load_main_data()
 
+# Apply global filters to main data
 df_main_filtered = df_main.copy()
 if selected_plan_global != "All" and 'plan' in df_main_filtered.columns:
     df_main_filtered = df_main_filtered[df_main_filtered["plan"] == selected_plan_global]
@@ -509,6 +521,13 @@ if selected_region_global != "All" and 'region' in df_main_filtered.columns:
     df_main_filtered = df_main_filtered[df_main_filtered["region"] == selected_region_global]
 if 'year' in df_main_filtered.columns:
     df_main_filtered = df_main_filtered[df_main_filtered["year"] == selected_year_global]
+if selected_segment_global != "All" and 'customer_segment' in df_main_filtered.columns:
+    df_main_filtered = df_main_filtered[df_main_filtered["customer_segment"] == selected_segment_global]
+if 'monthly_revenue' in df_main_filtered.columns:
+    df_main_filtered = df_main_filtered[
+        (df_main_filtered["monthly_revenue"] >= selected_revenue_range_global[0]) &
+        (df_main_filtered["monthly_revenue"] <= selected_revenue_range_global[1])
+    ]
 
 def kpi_color(value, thresholds):
     if not isinstance(value, (int, float)):
@@ -521,11 +540,12 @@ def kpi_color(value, thresholds):
         return "🔴"
 
 # --- Main Dashboard Tabs ---
-tab_overview, tab_funnel, tab_pricing, tab_ab_testing, tab_data_quality, tab_executive_summary = st.tabs([
+tab_overview, tab_funnel, tab_pricing, tab_ab_testing, tab_geographic, tab_data_quality, tab_executive_summary = st.tabs([
     "📈 Overview",
     "🔄 Funnel Analysis",
     "💰 Pricing & Financials",
     "🧪 A/B Testing",
+    "🌍 Geographic",
     "🛠️ Data Quality",
     "📋 Executive Summary"
 ])
@@ -580,7 +600,7 @@ with tab_funnel:
 
     st.markdown("#### Funnel Filters")
     with st.container(border=True):
-        col_f1, col_f2, col_f3 = st.columns(3)
+        col_f1, col_f2, col_f3, col_f4 = st.columns(4) # Added a column for segment filter
         with col_f1:
             plan_options = ["All"] + (funnel_df_main['plan'].unique().tolist() if 'plan' in funnel_df_main.columns else [])
             funnel_plan = st.selectbox("Plan", plan_options, key="funnel_plan")
@@ -591,6 +611,9 @@ with tab_funnel:
             min_year = int(funnel_df_main['year'].min()) if 'year' in funnel_df_main.columns and not funnel_df_main['year'].empty else 2021
             max_year = int(funnel_df_main['year'].max()) if 'year' in funnel_df_main.columns and not funnel_df_main['year'].empty else 2024
             funnel_year = st.slider("Year", min_year, max_year, max_year, key="funnel_year")
+        with col_f4: # New segment filter for funnel
+            segment_options_funnel = ["All"] + (funnel_df_main['customer_segment'].unique().tolist() if 'customer_segment' in funnel_df_main.columns else [])
+            funnel_segment = st.selectbox("Customer Segment", segment_options_funnel, key="funnel_segment")
 
     funnel_df_filtered = funnel_df_main.copy()
     if funnel_plan != "All" and 'plan' in funnel_df_filtered.columns:
@@ -599,6 +622,9 @@ with tab_funnel:
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["region"] == funnel_region]
     if 'year' in funnel_df_filtered.columns:
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["year"] == funnel_year]
+    if funnel_segment != "All" and 'customer_segment' in funnel_df_filtered.columns:
+        funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["customer_segment"] == funnel_segment]
+
 
     st.markdown("#### User Journey Funnel Drop-Off")
     with st.container(border=True):
@@ -759,6 +785,88 @@ with tab_ab_testing:
         st.markdown(f"🧮 **Estimated Required Sample per Group:** `{sample_size}`")
         st.caption("Assumes equal-sized control and variant groups.")
 
+# --- Tab: Geographic ---
+with tab_geographic:
+    st.header("🌍 Geographic Insights")
+    st.markdown("Analyze user distribution and conversion rates across different regions.")
+
+    st.markdown("#### Global Conversion Map (from Main Data - filtered)")
+    with st.container(border=True):
+        if not df_main_filtered.empty:
+            geo_data_main = df_main_filtered.copy()
+            if 'region' in geo_data_main.columns:
+                region_coords_main = {
+                    "North America": {"lat": 37.1, "lon": -95.7, "display_name": "North America"},
+                    "Europe": {"lat": 50.1, "lon": 10.4, "display_name": "Europe"},
+                    "APAC": {"lat": 1.3, "lon": 103.8, "display_name": "APAC"},
+                    "LATAM": {"lat": -15.6, "lon": -47.9, "display_name": "LATAM"}
+                }
+                geo_data_main["lat"] = geo_data_main["region"].map(lambda r: region_coords_main.get(r, {}).get("lat"))
+                geo_data_main["lon"] = geo_data_main["region"].map(lambda r: region_coords_main.get(r, {}).get("lon"))
+                geo_data_main["display_name"] = geo_data_main["region"].map(lambda r: region_coords_main.get(r, {}).get("display_name"))
+
+                geo_data_main = geo_data_main.dropna(subset=['lat', 'lon'])
+
+                if not geo_data_main.empty:
+                    # Aggregate data by region for the map to avoid too many points
+                    aggregated_geo_data = geo_data_main.groupby('region').agg(
+                        lat=('lat', 'first'),
+                        lon=('lon', 'first'),
+                        avg_conversion_rate=('conversion_rate', 'mean'),
+                        num_records=('conversion_rate', 'count')
+                    ).reset_index()
+                    aggregated_geo_data['display_name'] = aggregated_geo_data['region']
+
+                    fig_map_global = px.scatter_mapbox(
+                        aggregated_geo_data,
+                        lat="lat",
+                        lon="lon",
+                        color="avg_conversion_rate",
+                        size="num_records", # Size by number of records
+                        hover_name="display_name",
+                        hover_data={'avg_conversion_rate': ':.2%', 'num_records': True}, # Format conversion rate
+                        size_max=40,
+                        zoom=1,
+                        mapbox_style="carto-positron",
+                        title="Global Average Conversion Rate by Region"
+                    )
+                    st.plotly_chart(fig_map_global, use_container_width=True)
+                else:
+                    st.info("No geographic data available after mapping regions to coordinates for the current filters.")
+            else:
+                st.warning("The 'region' column is missing in the main filtered data for Global Geographic map.")
+        else:
+            st.info("No main data available for the selected filters to display Global Geographic Insights.")
+
+    st.markdown("### 🚀 Market Expansion Opportunities (Simulated)")
+    with st.container(border=True):
+        expansion_analysis = pd.DataFrame({
+            "Market": ["Brazil", "India", "Australia", "Germany"],
+            "TAM ($M)": [450, 890, 180, 320],
+            "Market Growth Rate (%)": [15, 25, 12, 8],
+            "Competitive Intensity": ["Medium", "High", "Low", "High"],
+            "Entry Difficulty": ["Medium", "High", "Low", "Low"],
+            "Revenue Opportunity ($M)": [2.3, 4.5, 0.9, 1.6],
+            "Priority Score": [75, 68, 88, 82]
+        })
+
+        def style_priority(val):
+            if val >= 85: return 'background-color: #c8e6c9' # Light Green
+            elif val >= 80: return 'background-color: #dcedc8' # Lighter Green
+            elif val >= 75: return 'background-color: #fff9c4' # Light Yellow
+            else: return 'background-color: #ffcdd2' # Light Red
+
+        styled_expansion = expansion_analysis.style.applymap(style_priority, subset=['Priority Score'])
+        st.dataframe(styled_expansion, use_container_width=True)
+
+        st.markdown("""
+        **Insights:**
+        - **Australia** shows the highest priority due to **low competitive intensity** and **high market growth**.
+        - **India** represents a large TAM but also presents **high entry difficulty** and competition.
+        - **Brazil** and **Germany** offer balanced opportunities.
+        """)
+
+
 # --- Tab: Data Quality
 with tab_data_quality:
     st.header("🛠️ Data Quality Assessment")
@@ -798,10 +906,10 @@ with tab_data_quality:
 
                 st.markdown(f"""
                 **Quality Summary:**
-                - Average Completeness: {completeness_avg:.1f}%
-                - Consistency Issues Detected: {consistency_issues}
-                - Validity Issues Detected: {validity_issues}
-                - Duplicate Records: {quality_report['duplicates']['total_duplicates']}
+                - Average Completeness: **{completeness_avg:.1f}%**
+                - Consistency Issues Detected: **{consistency_issues}**
+                - Validity Issues Detected: **{validity_issues}**
+                - Duplicate Records: **{quality_report['duplicates']['total_duplicates']}**
                 """)
             
             st.markdown("#### Detailed Completeness")
@@ -886,9 +994,9 @@ with tab_data_quality:
             with col_demo_issues:
                 st.markdown(f"""
                 **Issues Detected:**
-                - Consistency Issues: {len(quality_report['consistency'])}
-                - Validity Issues: {len(quality_report['validity'])}
-                - Missing Values: {sum(v['missing_count'] for v in quality_report['completeness'].values())}
+                - Consistency Issues: **{len(quality_report['consistency'])}**
+                - Validity Issues: **{len(quality_report['validity'])}**
+                - Missing Values: **{sum(v['missing_count'] for v in quality_report['completeness'].values())}**
                 """)
 
             st.markdown("*This showcases the analytical capabilities to detect various data quality issues.*")
@@ -918,7 +1026,7 @@ with tab_data_quality:
                     with col_demo_after:
                         st.markdown("**After Cleaning:**")
                         st.metric("Rows", f"{cleaning_report_demo['final_shape'][0]:,}", f"{cleaning_report_demo['rows_changed']:+,}")
-                        st.metric("Columns", cleaning_report_demo['final_shape'][1], f"{cleaning_report_demo['columns_changed']:+,}")
+                        st.metric("Columns", cleaning_report_report_demo['final_shape'][1], f"{cleaning_report_demo['columns_changed']:+,}")
 
                     st.markdown("#### Cleaning Steps Performed on Demo Data")
                     for step in cleaning_report_demo['cleaning_steps']:
@@ -991,4 +1099,4 @@ with tab_executive_summary:
     st.dataframe(kpi_chart_data, use_container_width=True)
 
     st.markdown("---")
-    st.markdown("*This simplified dashboard provides actionable insights to drive significant revenue optimization through data-driven strategies.*")
+    st.markdown("*This dashboard provides actionable insights to drive significant revenue optimization through data-driven strategies.*")
