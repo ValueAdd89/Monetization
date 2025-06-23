@@ -500,18 +500,56 @@ def load_main_data():
             st.warning(f"'{funnel_data_path}' not found or empty/missing 'plan' column. Generating dummy funnel data.")
             steps = ["Visited Landing Page", "Signed Up", "Completed Onboarding", "Subscribed", "Activated Core Feature"]
             step_order = list(range(len(steps)))
-            dummy_funnel = pd.DataFrame({
-                'step': steps,
-                'step_order': step_order,
-                'count': [10000, 6000, 3000, 1500, 1000]
-            })
-            num_rows = len(dummy_funnel)
-            np.random.seed(42)
-            dummy_funnel['region'] = np.random.choice(["North America", "Europe", "APAC", "LATAM"], num_rows)
-            dummy_funnel['plan'] = np.random.choice(["Basic", "Pro", "Enterprise"], num_rows)
-            dummy_funnel['year'] = np.random.choice([2021, 2022, 2023, 2024], num_rows)
-            funnel_main_loaded = dummy_funnel
-
+            
+            # Create base funnel data with steps and plans
+            plans = ["Basic", "Pro", "Enterprise"]
+            regions = ["North America", "Europe", "APAC", "LATAM"]
+            years = [2021, 2022, 2023, 2024]
+            
+            dummy_funnel_data = []
+        
+        # Generate funnel data for each combination of plan, region, and year
+        for plan in plans:
+            for region in regions:
+                for year in years:
+                    # Different conversion patterns by plan type
+                    if plan == "Basic":
+                        base_counts = [10000, 4000, 2000, 800, 400]  # Lower conversion for Basic
+                    elif plan == "Pro":
+                        base_counts = [8000, 5500, 3200, 1800, 1200]  # Better conversion for Pro
+                    else:  # Enterprise
+                        base_counts = [3000, 2400, 2000, 1600, 1400]  # Best conversion for Enterprise
+                    
+                    # Add some variation by region and year
+                    region_multiplier = {
+                        "North America": 1.2,
+                        "Europe": 1.0,
+                        "APAC": 0.8,
+                        "LATAM": 0.6
+                    }
+                    
+                    year_multiplier = {
+                        2021: 0.8,
+                        2022: 0.9,
+                        2023: 1.0,
+                        2024: 1.1
+                    }
+                    
+                    multiplier = region_multiplier[region] * year_multiplier[year]
+                    adjusted_counts = [int(count * multiplier) for count in base_counts]
+                    
+                    for i, (step, count) in enumerate(zip(steps, adjusted_counts)):
+                        dummy_funnel_data.append({
+                            'step': step,
+                            'step_order': i,
+                            'count': count,
+                            'plan': plan,
+                            'region': region,
+                            'year': year
+                        })
+        
+        funnel_main_loaded = pd.DataFrame(dummy_funnel_data)
+        
     except pd.errors.EmptyDataError:
         st.error("One or both main CSV files are empty. Please check their content.")
         df_main_loaded = pd.DataFrame({'plan': [], 'region': [], 'year': [], 'elasticity': [], 'conversion_rate': []})
