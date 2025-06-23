@@ -365,16 +365,9 @@ st.title("Telemetry Monetization Dashboard")
 st.markdown("This dashboard provides a concise overview of key monetization metrics and data quality insights.")
 st.markdown("---")
 
-# --- Sidebar Filters ---
-st.sidebar.header("🔍 Global Filters")
-selected_plan_global = st.sidebar.selectbox("Pricing Plan", ["All", "Basic", "Pro", "Enterprise"], key="global_plan")
-selected_region_global = st.sidebar.selectbox("Region", ["All", "North America", "Europe", "APAC", "LATAM"], key="global_region")
-customer_segments = ["All", "Small Business", "Mid-Market", "Enterprise"]
-selected_segment_global = st.sidebar.selectbox("Customer Segment", customer_segments, key="global_segment")
-selected_year_global = st.sidebar.slider("Year", 2021, 2024, 2024, key="global_year")
-selected_revenue_range_global = st.sidebar.slider("Monthly Revenue Range ($)", 0, 1000, (0, 1000), key="global_revenue_range")
-
 # --- Data Loading Function ---
+# Using st.cache_data is good for data loading that doesn't change often
+# but ensure that any data filtering happens *after* the cached load
 @st.cache_data
 def load_main_data():
     base_path = Path(__file__).parent.parent / "data" / "processed"
@@ -385,7 +378,6 @@ def load_main_data():
     funnel_main_loaded = pd.DataFrame()
 
     try:
-        # Attempt to load pricing data, generate dummy if not found
         if pricing_elasticity_path.exists():
             df_main_loaded = pd.read_csv(pricing_elasticity_path)
         else:
@@ -395,12 +387,11 @@ def load_main_data():
                 'year': np.random.choice([2021, 2022, 2023, 2024], 200),
                 'elasticity': np.random.uniform(0.3, 1.5, 200).round(2),
                 'conversion_rate': np.random.uniform(0.05, 0.30, 200).round(2),
-                'customer_segment': np.random.choice(customer_segments[1:], 200),
+                'customer_segment': np.random.choice(["Small Business", "Mid-Market", "Enterprise"], 200),
                 'monthly_revenue': np.random.uniform(20, 900, 200).round(2)
             }
             df_main_loaded = pd.DataFrame(dummy_data_pricing)
 
-        # Attempt to load funnel data, generate dummy if not found
         if funnel_data_path.exists():
             funnel_main_loaded = pd.read_csv(funnel_data_path)
         else:
@@ -410,7 +401,7 @@ def load_main_data():
             plans = ["Basic", "Pro", "Enterprise"]
             regions = ["North America", "Europe", "APAC", "LATAM"]
             years = [2021, 2022, 2023, 2024]
-            segments = customer_segments[1:]
+            segments = ["Small Business", "Mid-Market", "Enterprise"]
             
             dummy_funnel_data = []
             for plan in plans:
@@ -446,40 +437,68 @@ def load_main_data():
     
     return df_main_loaded, funnel_main_loaded
 
-df_main, funnel_df_original = load_main_data() # Renamed to funnel_df_original for clarity
+# Load the original (unfiltered) dataframes once
+df_original, funnel_df_original = load_main_data()
 
-# Apply global filters to main data
-df_main_filtered = df_main.copy()
-if selected_plan_global != "All" and 'plan' in df_main_filtered.columns:
-    df_main_filtered = df_main_filtered[df_main_filtered["plan"] == selected_plan_global]
-if selected_region_global != "All" and 'region' in df_main_filtered.columns:
-    df_main_filtered = df_main_filtered[df_main_filtered["region"] == selected_region_global]
-if 'year' in df_main_filtered.columns:
-    df_main_filtered = df_main_filtered[df_main_filtered["year"] == selected_year_global]
-if selected_segment_global != "All" and 'customer_segment' in df_main_filtered.columns:
-    df_main_filtered = df_main_filtered[df_main_filtered["customer_segment"] == selected_segment_global]
-if 'monthly_revenue' in df_main_filtered.columns:
-    df_main_filtered = df_main_filtered[
-        (df_main_filtered["monthly_revenue"] >= selected_revenue_range_global[0]) &
-        (df_main_filtered["monthly_revenue"] <= selected_revenue_range_global[1])
-    ]
+# --- Sidebar Filters ---
+st.sidebar.header("🔍 Global Filters")
+# Define possible options for selectboxes
+customer_segments_options = ["All", "Small Business", "Mid-Market", "Enterprise"]
+plan_options_all = ["All", "Basic", "Pro", "Enterprise"]
+region_options_all = ["All", "North America", "Europe", "APAC", "LATAM"]
 
 
-# --- CRITICAL CHANGE: Apply ALL global filters to the funnel data
-funnel_df_globally_filtered = funnel_df_original.copy()
+selected_plan_global = st.sidebar.selectbox("Pricing Plan", plan_options_all, key="global_plan")
+selected_region_global = st.sidebar.selectbox("Region", region_options_all, key="global_region")
+selected_segment_global = st.sidebar.selectbox("Customer Segment", customer_segments_options, key="global_segment")
 
-if selected_plan_global != "All" and 'plan' in funnel_df_globally_filtered.columns:
-    funnel_df_globally_filtered = funnel_df_globally_filtered[funnel_df_globally_filtered["plan"] == selected_plan_global]
-if selected_region_global != "All" and 'region' in funnel_df_globally_filtered.columns:
-    funnel_df_globally_filtered = funnel_df_globally_filtered[funnel_df_globally_filtered["region"] == selected_region_global]
-if selected_segment_global != "All" and 'customer_segment' in funnel_df_globally_filtered.columns:
-    funnel_df_globally_filtered = funnel_df_globally_filtered[funnel_df_globally_filtered["customer_segment"] == selected_segment_global]
-if 'year' in funnel_df_globally_filtered.columns:
-    funnel_df_globally_filtered = funnel_df_globally_filtered[funnel_df_globally_filtered["year"] == selected_year_global]
+# Safely get min/max year from original data for the global slider
+global_min_year = int(df_original['year'].min()) if 'year' in df_original.columns and not df_original['year'].empty else 2021
+global_max_year = int(df_original['year'].max()) if 'year' in df_original.columns and not df_original['year'].empty else 2024
+selected_year_global = st.sidebar.slider("Year", global_min_year, global_max_year, global_max_year, key="global_year")
 
-# Note: The revenue range global filter isn't directly applicable to the funnel_df as it doesn't have 'monthly_revenue'
-# If it did, you'd apply it here too.
+# Safely get min/max revenue from original data for the global slider
+global_min_revenue = int(df_original['monthly_revenue'].min()) if 'monthly_revenue' in df_original.columns and not df_original['monthly_revenue'].empty else 0
+global_max_revenue = int(df_original['monthly_revenue'].max()) if 'monthly_revenue' in df_original.columns and not df_original['monthly_revenue'].empty else 1000
+selected_revenue_range_global = st.sidebar.slider("Monthly Revenue Range ($)", global_min_revenue, global_max_revenue, (global_min_revenue, global_max_revenue), key="global_revenue_range")
 
+# --- Centralized Filtering Function ---
+def apply_global_filters(df, plan, region, segment, year, revenue_range=None):
+    df_filtered = df.copy()
+
+    if plan != "All" and 'plan' in df_filtered.columns:
+        df_filtered = df_filtered[df_filtered["plan"] == plan]
+    if region != "All" and 'region' in df_filtered.columns:
+        df_filtered = df_filtered[df_filtered["region"] == region]
+    if segment != "All" and 'customer_segment' in df_filtered.columns:
+        df_filtered = df_filtered[df_filtered["customer_segment"] == segment]
+    if 'year' in df_filtered.columns:
+        df_filtered = df_filtered[df_filtered["year"] == year]
+    
+    if revenue_range and 'monthly_revenue' in df_filtered.columns:
+        df_filtered = df_filtered[
+            (df_filtered["monthly_revenue"] >= revenue_range[0]) &
+            (df_filtered["monthly_revenue"] <= revenue_range[1])
+        ]
+    return df_filtered
+
+# Apply global filters to both main and funnel dataframes
+df_main_filtered = apply_global_filters(
+    df_original,
+    selected_plan_global,
+    selected_region_global,
+    selected_segment_global,
+    selected_year_global,
+    selected_revenue_range_global
+)
+
+funnel_df_globally_filtered = apply_global_filters(
+    funnel_df_original,
+    selected_plan_global,
+    selected_region_global,
+    selected_segment_global,
+    selected_year_global # No revenue range filter for funnel data as per its structure
+)
 
 def kpi_color(value, thresholds):
     if not isinstance(value, (int, float)):
@@ -542,7 +561,7 @@ with tab_overview:
 
     st.markdown("#### Filtered Raw Data Sample")
     with st.container(border=True):
-        st.dataframe(df_main_filtered.head(), use_container_width=True) # Displaying head for brevity
+        st.dataframe(df_main_filtered.head(), use_container_width=True)
 
 
 # --- Tab: Funnel Analysis ---
@@ -555,42 +574,45 @@ with tab_funnel:
         col_f1, col_f2, col_f3, col_f4 = st.columns(4)
         with col_f1:
             # Populate options from the globally filtered funnel data
-            plan_options = ["All"] + sorted(funnel_df_globally_filtered['plan'].dropna().unique().tolist()) if 'plan' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['plan'].empty else ["All"]
-            funnel_plan = st.selectbox("Plan", plan_options, key="funnel_plan")
+            plan_options_funnel = ["All"]
+            if 'plan' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['plan'].empty:
+                plan_options_funnel.extend(sorted(funnel_df_globally_filtered['plan'].dropna().unique().tolist()))
+            funnel_plan = st.selectbox("Plan", plan_options_funnel, key="funnel_plan")
         with col_f2:
             # Populate options from the globally filtered funnel data
-            region_options = ["All"] + sorted(funnel_df_globally_filtered['region'].dropna().unique().tolist()) if 'region' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['region'].empty else ["All"]
-            funnel_region = st.selectbox("Region", region_options, key="funnel_region")
+            region_options_funnel = ["All"]
+            if 'region' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['region'].empty:
+                region_options_funnel.extend(sorted(funnel_df_globally_filtered['region'].dropna().unique().tolist()))
+            funnel_region = st.selectbox("Region", region_options_funnel, key="funnel_region")
         with col_f3:
             # Populate options from the globally filtered funnel data
-            segment_options_funnel = ["All"] + sorted(funnel_df_globally_filtered['customer_segment'].dropna().unique().tolist()) if 'customer_segment' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['customer_segment'].empty else ["All"]
+            segment_options_funnel = ["All"]
+            if 'customer_segment' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['customer_segment'].empty:
+                segment_options_funnel.extend(sorted(funnel_df_globally_filtered['customer_segment'].dropna().unique().tolist()))
             funnel_segment = st.selectbox("Customer Segment", segment_options_funnel, key="funnel_segment")
         with col_f4: # Year slider moved to after dropdowns
-            # Safely determine min/max year for the funnel slider
+            # Safely determine min/max year for the funnel slider based on globally filtered data
             if 'year' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['year'].empty:
                 min_year_funnel = int(funnel_df_globally_filtered['year'].min())
                 max_year_funnel = int(funnel_df_globally_filtered['year'].max())
                 # Ensure the default value is within the valid range
                 default_year_funnel = max(min_year_funnel, min(max_year_funnel, selected_year_global))
             else:
-                # Fallback if no year data is present after global filtering
+                # Fallback if no year data is present after global filtering, use global selected year as only option
                 min_year_funnel = selected_year_global
                 max_year_funnel = selected_year_global
-                default_year_funnel = selected_year_global # Use global default, assuming it's a valid year
+                default_year_funnel = selected_year_global
 
             # If min_year_funnel and max_year_funnel are the same, make it a selectbox for a single year or disable
             if min_year_funnel == max_year_funnel:
-                funnel_year = st.selectbox("Year", [min_year_funnel], key="funnel_year_single")
+                funnel_year = st.selectbox("Year", [default_year_funnel], key="funnel_year_single")
             else:
                 funnel_year = st.slider("Year", min_year_funnel, max_year_funnel, default_year_funnel, key="funnel_year_range")
 
 
     # Apply funnel-specific filters on top of the already globally filtered funnel data
-    # (These will likely be redundant if we fully filter funnel_df_globally_filtered,
-    # but kept for explicit clarity that these *could* further refine if desired)
     funnel_df_filtered = funnel_df_globally_filtered.copy()
 
-    # Ensure columns exist and the selected value is not "All" before filtering
     if 'plan' in funnel_df_filtered.columns and funnel_plan != "All":
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["plan"] == funnel_plan]
     if 'region' in funnel_df_filtered.columns and funnel_region != "All":
@@ -604,13 +626,9 @@ with tab_funnel:
     st.markdown("#### User Journey Funnel Drop-Off")
     with st.container(border=True):
         if not funnel_df_filtered.empty:
-            if 'step' in funnel_df_filtered.columns and 'count' in funnel_df_filtered.columns:
+            if 'step' in funnel_df_filtered.columns and 'count' in funnel_df_filtered.columns and 'step_order' in funnel_df_filtered.columns:
                 funnel_aggregated = funnel_df_filtered.groupby(['step', 'step_order']).agg({'count': 'sum'}).reset_index()
-                if 'step_order' in funnel_aggregated.columns:
-                    funnel_df_sorted = funnel_aggregated.sort_values(by="step_order", ascending=True)
-                else:
-                    st.warning("Column 'step_order' not found in funnel data, chart may not be sorted correctly.")
-                    funnel_df_sorted = funnel_aggregated
+                funnel_df_sorted = funnel_aggregated.sort_values(by="step_order", ascending=True)
 
                 fig_funnel = px.funnel(
                     funnel_df_sorted,
@@ -620,11 +638,11 @@ with tab_funnel:
                 )
                 st.plotly_chart(fig_funnel, use_container_width=True)
             else:
-                st.info("Required columns 'step' or 'count' not found in filtered funnel data for chart.")
+                st.info("Required columns ('step', 'count', or 'step_order') not found in filtered funnel data for chart.")
         else:
             st.info("Funnel data is not available for the selected filters.")
 
-    if not funnel_df_filtered.empty and 'step' in funnel_df_filtered.columns:
+    if not funnel_df_filtered.empty and 'step' in funnel_df_filtered.columns and 'step_order' in funnel_df_filtered.columns:
         st.markdown("#### Conversion Rates Between Steps")
         with st.container(border=True):
             funnel_conversion = funnel_df_filtered.groupby(['step', 'step_order']).agg({'count': 'sum'}).reset_index().sort_values('step_order')
@@ -682,7 +700,6 @@ with tab_pricing:
             gross_margin = (projected_gross_profit[-1] / final_mrr_calc * 100) if final_mrr_calc != 0 else 0
             simulated_net_margin_percent_calc = gross_margin * 0.5 # Example: 50% of gross profit becomes net profit
             
-            # Removed ** bolding as requested
             col_fin1.markdown(f"<div class='metric-card'>Projected ARR<br><span style='font-size:1.5em;'>${final_arr_calc:,.0f}</span></div>", unsafe_allow_html=True)
             col_fin2.markdown(f"<div class='metric-card'>Monthly Revenue<br><span style='font-size:1.5em;'>${final_mrr_calc:,.0f}</span></div>", unsafe_allow_html=True)
             col_fin3.markdown(f"<div class='metric-card'>Gross Margin<br><span style='font-size:1.5em;'>{gross_margin:.1f}%</span></div>", unsafe_allow_html=True)
@@ -696,7 +713,6 @@ with tab_pricing:
 
         with col_rev_inputs:
             st.markdown("**Model Parameters**")
-            # These are the interactive inputs, distinct from the initial KPI calculation
             current_mrr = st.number_input("Current MRR ($)", value=125000, min_value=0, key="rev_current_mrr_simple")
             growth_rate = st.slider("Monthly Growth Rate (%)", 0.0, 15.0, 5.2, 0.1, key="rev_growth_rate_simple")
             churn_rate = st.slider("Monthly Churn Rate (%)", 0.0, 10.0, 2.8, 0.1, key="rev_churn_rate_simple")
@@ -861,6 +877,7 @@ with tab_geographic:
     else: # Global View
         st.markdown("#### Global Conversion Map (from Main Data - filtered)")
         with st.container(border=True):
+            # The df_main_filtered is already globally filtered
             if not df_main_filtered.empty:
                 geo_data_main = df_main_filtered.copy()
                 if 'region' in geo_data_main.columns:
