@@ -785,8 +785,8 @@ with tab_funnel:
             st.plotly_chart(fig_funnel, use_container_width=True)
         else:
             st.info("Required columns 'step' or 'count' not found in filtered funnel data for chart.")
-else:
-    st.info("Funnel data is not available for the selected filters.")
+        else:
+        st.info("Funnel data is not available for the selected filters.")
 
 # Add funnel conversion rate analysis
 if not funnel_df_filtered.empty and 'step' in funnel_df_filtered.columns:
