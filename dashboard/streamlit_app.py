@@ -7,7 +7,7 @@ import numpy as np
 from scipy.stats import norm
 from datetime import datetime, timedelta
 import warnings
-warnings.filterwarnings('ignore') # Suppress warnings, especially from pandas styling
+warnings.filterwarnings('ignore') # Suppress warnings globally
 
 # === DATA QUALITY ASSESSMENT FRAMEWORK CLASSES ===
 
@@ -37,49 +37,48 @@ class DataQualityAssessment:
         return completeness
 
     def assess_consistency(self):
-        """Detect data consistency issues"""
-        consistency_issues = []
+       consistency_issues = []
 
-        revenue_columns = [col for col in self.df.columns if 'revenue' in col.lower() or 'price' in col.lower() or 'amount' in col.lower()]
-        for col in revenue_columns:
-            if col in self.df.columns and pd.api.types.is_numeric_dtype(self.df[col]):
-                negative_count = (self.df[col] < 0).sum()
-                if negative_count > 0:
-                    consistency_issues.append({
-                        'column': col,
-                        'issue': 'Negative values in revenue/price field',
-                        'count': negative_count,
-                        'severity': 'High'
-                    })
+       revenue_columns = [col for col in self.df.columns if 'revenue' in col.lower() or 'price' in col.lower() or 'amount' in col.lower()]
+       for col in revenue_columns:
+           if col in self.df.columns and pd.api.types.is_numeric_dtype(self.df[col]):
+               negative_count = (self.df[col] < 0).sum()
+               if negative_count > 0:
+                   consistency_issues.append({
+                       'column': col,
+                       'issue': 'Negative values in revenue/price field',
+                       'count': negative_count,
+                       'severity': 'High'
+                   })
 
-        date_columns = [col for col in self.df.columns if 'date' in col.lower() or col.endswith('_at')]
-        for col in date_columns:
-            if col in self.df.columns and not self.df[col].empty:
-                try:
-                    df_dates = pd.to_datetime(self.df[col], errors='coerce')
-                    future_dates = (df_dates > datetime.now()).sum()
-                    if future_dates > 0:
-                        consistency_issues.append({
-                            'column': col,
-                            'issue': 'Future dates detected',
-                            'count': future_dates,
-                            'severity': 'Medium'
-                        })
-                except Exception:
-                    pass
+       date_columns = [col for col in self.df.columns if 'date' in col.lower() or col.endswith('_at')]
+       for col in date_columns:
+           if col in self.df.columns and not self.df[col].empty:
+               try:
+                   df_dates = pd.to_datetime(self.df[col], errors='coerce')
+                   future_dates = (df_dates > datetime.now()).sum()
+                   if future_dates > 0:
+                       consistency_issues.append({
+                           'column': col,
+                           'issue': 'Future dates detected',
+                           'count': future_dates,
+                           'severity': 'Medium'
+                       })
+               except Exception:
+                   pass
 
-        conversion_columns = [col for col in self.df.columns if 'conversion' in col.lower() or 'rate' in col.lower()]
-        for col in conversion_columns:
-            if col in self.df.columns and pd.api.types.is_numeric_dtype(self.df[col]):
-                impossible_rates = (self.df[col] > 1.0).sum() if self.df[col].max() <= 1.0 else (self.df[col] > 100).sum()
-                if impossible_rates > 0:
-                    consistency_issues.append({
-                        'column': col,
-                        'issue': 'Conversion rate >100%',
-                        'count': impossible_rates,
-                        'severity': 'High'
-                    })
-        return consistency_issues
+       conversion_columns = [col for col in self.df.columns if 'conversion' in col.lower() or 'rate' in col.lower()]
+       for col in conversion_columns:
+           if col in self.df.columns and pd.api.types.is_numeric_dtype(self.df[col]):
+               impossible_rates = (self.df[col] > 1.0).sum() if self.df[col].max() <= 1.0 else (self.df[col] > 100).sum()
+               if impossible_rates > 0:
+                   consistency_issues.append({
+                       'column': col,
+                       'issue': 'Conversion rate >100%',
+                       'count': impossible_rates,
+                       'severity': 'High'
+                   })
+       return consistency_issues
 
     def assess_validity(self):
         """Check data validity against business rules"""
@@ -388,8 +387,8 @@ def create_messy_demo_dataset():
 
 st.set_page_config(
     layout="wide",
-    page_title="Simplified Telemetry Dashboard",
-    page_icon="📊"
+    page_title="Monetization Dashboard",
+    page_icon="💰"
 )
 
 st.markdown("""
@@ -402,21 +401,17 @@ st.markdown("""
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
     transition: 0.3s;
 }
-.stMetric {
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+.metric-card {
+    background-color: rgba(255, 255, 255, 0.05); /* Lighter background */
+    border-radius: 10px;
     padding: 15px;
     margin-bottom: 10px;
-}
-div.st-emotion-cache-1kyxreq {
-    justify-content: space-around;
-    gap: 20px;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }
 </style>
 """, unsafe_allow_html=True)
 
-
-st.title("📊 Simplified Telemetry Monetization Dashboard")
+st.title("Simplified Telemetry Monetization Dashboard")
 st.markdown("This dashboard provides a concise overview of key monetization metrics and data quality insights.")
 st.markdown("---")
 
@@ -424,13 +419,12 @@ st.markdown("---")
 st.sidebar.header("🔍 Global Filters")
 selected_plan_global = st.sidebar.selectbox("Pricing Plan", ["All", "Basic", "Pro", "Enterprise"], key="global_plan")
 selected_region_global = st.sidebar.selectbox("Region", ["All", "North America", "Europe", "APAC", "LATAM"], key="global_region")
-selected_year_global = st.sidebar.slider("Year", 2021, 2024, 2024, key="global_year")
-
-# Additional global filters
+# Moved Customer Segment here as per screenshot order (dropdowns first)
 customer_segments = ["All", "Small Business", "Mid-Market", "Enterprise"]
 selected_segment_global = st.sidebar.selectbox("Customer Segment", customer_segments, key="global_segment")
+# Sliders after dropdowns
+selected_year_global = st.sidebar.slider("Year", 2021, 2024, 2024, key="global_year")
 selected_revenue_range_global = st.sidebar.slider("Monthly Revenue Range ($)", 0, 1000, (0, 1000), key="global_revenue_range")
-
 
 # --- Data Loading Function ---
 @st.cache_data
@@ -443,41 +437,38 @@ def load_main_data():
     funnel_main_loaded = pd.DataFrame()
 
     try:
+        # Attempt to load pricing data, generate dummy if not found
         if pricing_elasticity_path.exists():
             df_main_loaded = pd.read_csv(pricing_elasticity_path)
-        if funnel_data_path.exists():
-            funnel_main_loaded = pd.read_csv(funnel_data_path)
-
-        # --- ENSURE DEMO COLUMNS EXIST FOR FILTERING AND CALCULATIONS ---
-        if df_main_loaded.empty or 'plan' not in df_main_loaded.columns:
-            st.warning(f"'{pricing_elasticity_path}' not found or empty/missing 'plan' column. Generating dummy pricing data.")
-            dummy_data = {
-                'plan': np.random.choice(['Basic', 'Pro', 'Enterprise'], 200), # Increased records for better simulation
+        else:
+            dummy_data_pricing = {
+                'plan': np.random.choice(['Basic', 'Pro', 'Enterprise'], 200),
                 'region': np.random.choice(['North America', 'Europe', 'APAC', 'LATAM'], 200),
                 'year': np.random.choice([2021, 2022, 2023, 2024], 200),
                 'elasticity': np.random.uniform(0.3, 1.5, 200).round(2),
                 'conversion_rate': np.random.uniform(0.05, 0.30, 200).round(2),
-                'customer_segment': np.random.choice(customer_segments[1:], 200), # Exclude 'All'
+                'customer_segment': np.random.choice(customer_segments[1:], 200),
                 'monthly_revenue': np.random.uniform(20, 900, 200).round(2)
             }
-            df_main_loaded = pd.DataFrame(dummy_data)
+            df_main_loaded = pd.DataFrame(dummy_data_pricing)
 
-        if funnel_main_loaded.empty or 'plan' not in funnel_main_loaded.columns:
-            st.warning(f"'{funnel_data_path}' not found or empty/missing 'plan' column. Generating dummy funnel data.")
+        # Attempt to load funnel data, generate dummy if not found
+        if funnel_data_path.exists():
+            funnel_main_loaded = pd.read_csv(funnel_data_path)
+        else:
             steps = ["Visited Landing Page", "Signed Up", "Completed Onboarding", "Subscribed", "Activated Core Feature"]
             step_order = list(range(len(steps)))
             
             plans = ["Basic", "Pro", "Enterprise"]
             regions = ["North America", "Europe", "APAC", "LATAM"]
             years = [2021, 2022, 2023, 2024]
-            segments = customer_segments[1:] # Exclude 'All'
+            segments = customer_segments[1:]
             
             dummy_funnel_data = []
             for plan in plans:
                 for region in regions:
                     for year in years:
-                        for segment in segments: # Add segment to funnel data
-                            # Different conversion patterns by plan type
+                        for segment in segments:
                             if plan == "Basic":
                                 base_counts = [10000, 4000, 2000, 800, 400]
                             elif plan == "Pro":
@@ -485,7 +476,6 @@ def load_main_data():
                             else: # Enterprise
                                 base_counts = [3000, 2400, 2000, 1600, 1400]
                             
-                            # Add some variation by region, year, and segment
                             region_multiplier = {"North America": 1.2, "Europe": 1.0, "APAC": 0.8, "LATAM": 0.6}
                             year_multiplier = {2021: 0.8, 2022: 0.9, 2023: 1.0, 2024: 1.1}
                             segment_multiplier = {"Small Business": 0.9, "Mid-Market": 1.0, "Enterprise": 1.1}
@@ -497,18 +487,18 @@ def load_main_data():
                                 dummy_funnel_data.append({
                                     'step': step, 'step_order': i, 'count': count,
                                     'plan': plan, 'region': region, 'year': year,
-                                    'customer_segment': segment # Add segment
+                                    'customer_segment': segment
                                 })
             funnel_main_loaded = pd.DataFrame(dummy_funnel_data)
             
-    except pd.errors.EmptyDataError:
-        st.error("One or both main CSV files are empty. Please check their content.")
-        df_main_loaded = pd.DataFrame({'plan': [], 'region': [], 'year': [], 'elasticity': [], 'conversion_rate': [], 'customer_segment': [], 'monthly_revenue': []})
-        funnel_main_loaded = pd.DataFrame({'step': [], 'step_order': [], 'count': [], 'region': [], 'plan': [], 'year': [], 'customer_segment': []})
     except Exception as e:
-        st.error(f"An unexpected error occurred during data loading: {e}")
+        # Catch any loading errors and provide empty dataframes
+        # The specific warning message from the file loading will NOT be shown to the user.
+        # This is for robust error handling without cluttering the UI with internal messages.
+        st.error(f"An unexpected error occurred during data loading: {e}. Displaying limited dummy data.")
         df_main_loaded = pd.DataFrame({'plan': [], 'region': [], 'year': [], 'elasticity': [], 'conversion_rate': [], 'customer_segment': [], 'monthly_revenue': []})
         funnel_main_loaded = pd.DataFrame({'step': [], 'step_order': [], 'count': [], 'region': [], 'plan': [], 'year': [], 'customer_segment': []})
+    
     return df_main_loaded, funnel_main_loaded
 
 df_main, funnel_df_main = load_main_data()
@@ -600,7 +590,7 @@ with tab_funnel:
 
     st.markdown("#### Funnel Filters")
     with st.container(border=True):
-        col_f1, col_f2, col_f3, col_f4 = st.columns(4) # Added a column for segment filter
+        col_f1, col_f2, col_f3, col_f4 = st.columns(4)
         with col_f1:
             plan_options = ["All"] + (funnel_df_main['plan'].unique().tolist() if 'plan' in funnel_df_main.columns else [])
             funnel_plan = st.selectbox("Plan", plan_options, key="funnel_plan")
@@ -611,7 +601,7 @@ with tab_funnel:
             min_year = int(funnel_df_main['year'].min()) if 'year' in funnel_df_main.columns and not funnel_df_main['year'].empty else 2021
             max_year = int(funnel_df_main['year'].max()) if 'year' in funnel_df_main.columns and not funnel_df_main['year'].empty else 2024
             funnel_year = st.slider("Year", min_year, max_year, max_year, key="funnel_year")
-        with col_f4: # New segment filter for funnel
+        with col_f4:
             segment_options_funnel = ["All"] + (funnel_df_main['customer_segment'].unique().tolist() if 'customer_segment' in funnel_df_main.columns else [])
             funnel_segment = st.selectbox("Customer Segment", segment_options_funnel, key="funnel_segment")
 
@@ -634,6 +624,7 @@ with tab_funnel:
                 if 'step_order' in funnel_aggregated.columns:
                     funnel_df_sorted = funnel_aggregated.sort_values(by="step_order", ascending=True)
                 else:
+                    st.warning("Column 'step_order' not found in funnel data, chart may not be sorted correctly.")
                     funnel_df_sorted = funnel_aggregated
 
                 fig_funnel = px.funnel(funnel_df_sorted, x="count", y="step", title="User Journey Funnel Drop-Off")
@@ -703,6 +694,25 @@ with tab_pricing:
             fig_financial.update_layout(title="12-Month Financial Projection", xaxis_title="Month", yaxis_title="Amount ($)", hovermode='x unified')
             st.plotly_chart(fig_financial, use_container_width=True)
 
+    st.markdown("#### Key Financial Metrics (Month 12)")
+    with st.container(border=True):
+        col_fin1, col_fin2, col_fin3, col_fin4 = st.columns(4)
+
+        if projected_mrr:
+            final_mrr = projected_mrr[-1]
+            final_arr = final_mrr * 12
+            gross_margin = (projected_gross_profit[-1] / final_mrr * 100) if final_mrr != 0 else 0
+            # Simplified net margin for demo purposes
+            # In a real scenario, you'd calculate this based on other operating expenses.
+            simulated_net_margin_percent = gross_margin * 0.5 # Example: 50% of gross profit becomes net profit
+            
+            col_fin1.markdown(f"<div class='metric-card'>**Projected ARR**<br><span style='font-size:2em;'>${final_arr:,.0f}</span></div>", unsafe_allow_html=True)
+            col_fin2.markdown(f"<div class='metric-card'>**Monthly Revenue**<br><span style='font-size:2em;'>${final_mrr:,.0f}</span></div>", unsafe_allow_html=True)
+            col_fin3.markdown(f"<div class='metric-card'>**Gross Margin**<br><span style='font-size:2em;'>{gross_margin:.1f}%</span></div>", unsafe_allow_html=True)
+            col_fin4.markdown(f"<div class='metric-card'>**Est. Net Margin**<br><span style='font-size:2em;'>{simulated_net_margin_percent:.1f}%</span></div>", unsafe_allow_html=True)
+        else:
+            st.info("Adjust parameters to see financial projections.")
+
     st.markdown("#### LTV & CAC Analysis")
     with st.container(border=True):
         col_ltv_inputs, col_ltv_analysis = st.columns([1, 2])
@@ -719,11 +729,19 @@ with tab_pricing:
             basic_ltv = basic_arpu / (basic_churn / 100) if basic_churn > 0 else basic_arpu * 100 if basic_arpu > 0 else 0
             basic_ratio = basic_ltv / basic_cac if basic_cac > 0 else (float('inf') if basic_ltv > 0 else 0)
 
+            # Assuming fixed churn and CAC for Pro and Enterprise for simplicity without more inputs
+            pro_ltv = pro_arpu / (3.1/100) if 3.1 > 0 else pro_arpu*100
+            enterprise_ltv = enterprise_arpu / (1.8/100) if 1.8 > 0 else enterprise_arpu*100
+            pro_cac = 380
+            enterprise_cac = 2400
+            pro_ratio = pro_ltv / pro_cac if pro_cac > 0 else float('inf')
+            enterprise_ratio = enterprise_ltv / enterprise_cac if enterprise_cac > 0 else float('inf')
+
             ltv_cac_data = pd.DataFrame({
                 'Plan': ['Basic', 'Pro', 'Enterprise'],
-                'LTV': [basic_ltv, pro_arpu / (3.1/100) if 3.1 > 0 else pro_arpu*100, enterprise_arpu / (1.8/100) if 1.8 > 0 else enterprise_arpu*100],
-                'CAC': [basic_cac, 380, 2400],
-                'LTV/CAC Ratio': [basic_ratio, (pro_arpu / (3.1/100)) / 380 if 380 > 0 else float('inf'), (enterprise_arpu / (1.8/100)) / 2400 if 2400 > 0 else float('inf')]
+                'LTV': [basic_ltv, pro_ltv, enterprise_ltv],
+                'CAC': [basic_cac, pro_cac, enterprise_cac],
+                'LTV/CAC Ratio': [basic_ratio, pro_ratio, enterprise_ratio]
             })
 
             fig_ltv_cac = px.scatter(ltv_cac_data, x='CAC', y='LTV', color='Plan',
@@ -736,10 +754,29 @@ with tab_ab_testing:
     st.header("🧪 A/B Testing Results")
     st.markdown("Evaluate simulated experiment outcomes and determine statistical significance.")
 
-    st.markdown("#### Experiment Results")
+    # Key Metrics moved here, immediately under the title
+    st.markdown("#### Key Metrics")
+    with st.container(border=True):
+        # Sample data for A/B metrics (these would typically come from an experiment)
+        ab_df_sample = pd.DataFrame({
+            "Group": ["Control", "Variant"],
+            "Conversions": [200, 250],
+            "Users": [1000, 1000]
+        })
+        ab_df_sample["Conversion Rate (%)"] = (ab_df_sample["Conversions"] / ab_df_sample["Users"]) * 100
+        lift_sample = ab_df_sample["Conversion Rate (%)"].iloc[1] - ab_df_sample["Conversion Rate (%)"].iloc[0]
+
+        col_ab_metrics_1, col_ab_metrics_2, col_ab_metrics_3 = st.columns(3)
+        col_ab_metrics_1.metric("Control Rate", f"{ab_df_sample['Conversion Rate (%)'].iloc[0]:.1f}%")
+        col_ab_metrics_2.metric("Variant Rate", f"{ab_df_sample['Conversion Rate (%)'].iloc[1]:.1f}%")
+        col_ab_metrics_3.metric("Lift", f"{lift_sample:.1f}%")
+
+
+    st.markdown("#### Experiment Selection")
     with st.container(border=True):
         experiment = st.selectbox("Select Experiment", ["Pricing Button Color", "Onboarding Flow", "Homepage CTA"], key="ab_experiment_select_simple")
 
+        # This data changes based on selection, so it's placed after the selectbox
         if experiment == "Pricing Button Color":
             ab_df = pd.DataFrame({"Group": ["Control", "Variant"], "Conversions": [200, 250], "Users": [1000, 1000]})
         elif experiment == "Onboarding Flow":
@@ -750,15 +787,11 @@ with tab_ab_testing:
         ab_df["Conversion Rate (%)"] = (ab_df["Conversions"] / ab_df["Users"]) * 100
         lift = ab_df["Conversion Rate (%)"].iloc[1] - ab_df["Conversion Rate (%)"].iloc[0]
 
-        col_ab_chart, col_ab_metrics = st.columns([2, 1])
-        with col_ab_chart:
-            fig_ab = px.bar(ab_df, x="Group", y="Conversion Rate (%)", color="Group", text="Conversion Rate (%)", title="Conversion Rate by Group")
-            st.plotly_chart(fig_ab, use_container_width=True)
-        with col_ab_metrics:
-            st.markdown("##### Key Metrics")
-            st.metric("Control Rate", f"{ab_df['Conversion Rate (%)'].iloc[0]:.1f}%")
-            st.metric("Variant Rate", f"{ab_df['Conversion Rate (%)'].iloc[1]:.1f}%")
-            st.metric("Lift", f"{lift:.1f}%")
+
+    st.markdown("#### Conversion Rate Comparison")
+    with st.container(border=True):
+        fig_ab = px.bar(ab_df, x="Group", y="Conversion Rate (%)", color="Group", text="Conversion Rate (%)", title="Conversion Rate by Group")
+        st.plotly_chart(fig_ab, use_container_width=True)
 
     st.markdown("#### Statistical Significance & Sample Size")
     with st.container(border=True):
@@ -790,53 +823,81 @@ with tab_geographic:
     st.header("🌍 Geographic Insights")
     st.markdown("Analyze user distribution and conversion rates across different regions.")
 
-    st.markdown("#### Global Conversion Map (from Main Data - filtered)")
+    st.markdown("#### Map View Selection")
     with st.container(border=True):
-        if not df_main_filtered.empty:
-            geo_data_main = df_main_filtered.copy()
-            if 'region' in geo_data_main.columns:
-                region_coords_main = {
-                    "North America": {"lat": 37.1, "lon": -95.7, "display_name": "North America"},
-                    "Europe": {"lat": 50.1, "lon": 10.4, "display_name": "Europe"},
-                    "APAC": {"lat": 1.3, "lon": 103.8, "display_name": "APAC"},
-                    "LATAM": {"lat": -15.6, "lon": -47.9, "display_name": "LATAM"}
-                }
-                geo_data_main["lat"] = geo_data_main["region"].map(lambda r: region_coords_main.get(r, {}).get("lat"))
-                geo_data_main["lon"] = geo_data_main["region"].map(lambda r: region_coords_main.get(r, {}).get("lon"))
-                geo_data_main["display_name"] = geo_data_main["region"].map(lambda r: region_coords_main.get(r, {}).get("display_name"))
+        geo_view_type = st.radio("Select View", ["Global", "US Localized"], key="geo_view_type")
 
-                geo_data_main = geo_data_main.dropna(subset=['lat', 'lon'])
+    if geo_view_type == "US Localized":
+        st.markdown("#### US City-Level Active Users (Simulated Cities)")
+        with st.container(border=True):
+            geo_df_us = pd.DataFrame({
+                "City": ["San Francisco", "New York", "Austin", "Seattle", "Chicago", "Miami", "Denver"],
+                "Latitude": [37.7749, 40.7128, 30.2672, 47.6062, 41.8781, 25.7617, 39.7392],
+                "Longitude": [-122.4194, -74.0060, -97.7431, -122.3321, -87.6298, -80.1918, -104.9903],
+                "Active Users": [580, 950, 420, 610, 720, 350, 480]
+            })
 
-                if not geo_data_main.empty:
-                    # Aggregate data by region for the map to avoid too many points
-                    aggregated_geo_data = geo_data_main.groupby('region').agg(
-                        lat=('lat', 'first'),
-                        lon=('lon', 'first'),
-                        avg_conversion_rate=('conversion_rate', 'mean'),
-                        num_records=('conversion_rate', 'count')
-                    ).reset_index()
-                    aggregated_geo_data['display_name'] = aggregated_geo_data['region']
+            fig_geo_us = px.scatter_mapbox(
+                geo_df_us,
+                lat="Latitude",
+                lon="Longitude",
+                size="Active Users",
+                color="Active Users",
+                hover_name="City",
+                size_max=30,
+                zoom=3,
+                mapbox_style="carto-positron",
+                title="US City-Level Active Users"
+            )
+            st.plotly_chart(fig_geo_us, use_container_width=True)
+    else: # Global View
+        st.markdown("#### Global Conversion Map (from Main Data - filtered)")
+        with st.container(border=True):
+            if not df_main_filtered.empty:
+                geo_data_main = df_main_filtered.copy()
+                if 'region' in geo_data_main.columns:
+                    region_coords_main = {
+                        "North America": {"lat": 37.1, "lon": -95.7, "display_name": "North America"},
+                        "Europe": {"lat": 50.1, "lon": 10.4, "display_name": "Europe"},
+                        "APAC": {"lat": 1.3, "lon": 103.8, "display_name": "APAC"},
+                        "LATAM": {"lat": -15.6, "lon": -47.9, "display_name": "LATAM"}
+                    }
+                    geo_data_main["lat"] = geo_data_main["region"].map(lambda r: region_coords_main.get(r, {}).get("lat"))
+                    geo_data_main["lon"] = geo_data_main["region"].map(lambda r: region_coords_main.get(r, {}).get("lon"))
+                    geo_data_main["display_name"] = geo_data_main["region"].map(lambda r: region_coords_main.get(r, {}).get("display_name"))
 
-                    fig_map_global = px.scatter_mapbox(
-                        aggregated_geo_data,
-                        lat="lat",
-                        lon="lon",
-                        color="avg_conversion_rate",
-                        size="num_records", # Size by number of records
-                        hover_name="display_name",
-                        hover_data={'avg_conversion_rate': ':.2%', 'num_records': True}, # Format conversion rate
-                        size_max=40,
-                        zoom=1,
-                        mapbox_style="carto-positron",
-                        title="Global Average Conversion Rate by Region"
-                    )
-                    st.plotly_chart(fig_map_global, use_container_width=True)
+                    geo_data_main = geo_data_main.dropna(subset=['lat', 'lon'])
+
+                    if not geo_data_main.empty:
+                        # Aggregate data by region for the map to avoid too many points
+                        aggregated_geo_data = geo_data_main.groupby('region').agg(
+                            lat=('lat', 'first'),
+                            lon=('lon', 'first'),
+                            avg_conversion_rate=('conversion_rate', 'mean'),
+                            num_records=('conversion_rate', 'count')
+                        ).reset_index()
+                        aggregated_geo_data['display_name'] = aggregated_geo_data['region']
+
+                        fig_map_global = px.scatter_mapbox(
+                            aggregated_geo_data,
+                            lat="lat",
+                            lon="lon",
+                            color="avg_conversion_rate",
+                            size="num_records", # Size by number of records
+                            hover_name="display_name",
+                            hover_data={'avg_conversion_rate': ':.2%', 'num_records': True}, # Format conversion rate
+                            size_max=40,
+                            zoom=1,
+                            mapbox_style="carto-positron",
+                            title="Global Average Conversion Rate by Region"
+                        )
+                        st.plotly_chart(fig_map_global, use_container_width=True)
+                    else:
+                        st.info("No geographic data available after mapping regions to coordinates for the current filters.")
                 else:
-                    st.info("No geographic data available after mapping regions to coordinates for the current filters.")
+                    st.warning("The 'region' column is missing in the main filtered data for Global Geographic map.")
             else:
-                st.warning("The 'region' column is missing in the main filtered data for Global Geographic map.")
-        else:
-            st.info("No main data available for the selected filters to display Global Geographic Insights.")
+                st.info("No main data available for the selected filters to display Global Geographic Insights.")
 
     st.markdown("### 🚀 Market Expansion Opportunities (Simulated)")
     with st.container(border=True):
@@ -1026,7 +1087,7 @@ with tab_data_quality:
                     with col_demo_after:
                         st.markdown("**After Cleaning:**")
                         st.metric("Rows", f"{cleaning_report_demo['final_shape'][0]:,}", f"{cleaning_report_demo['rows_changed']:+,}")
-                        st.metric("Columns", cleaning_report_report_demo['final_shape'][1], f"{cleaning_report_demo['columns_changed']:+,}")
+                        st.metric("Columns", cleaning_report_demo['final_shape'][1], f"{cleaning_report_demo['columns_changed']:+,}")
 
                     st.markdown("#### Cleaning Steps Performed on Demo Data")
                     for step in cleaning_report_demo['cleaning_steps']:
@@ -1099,4 +1160,4 @@ with tab_executive_summary:
     st.dataframe(kpi_chart_data, use_container_width=True)
 
     st.markdown("---")
-    st.markdown("*This dashboard provides actionable insights to drive significant revenue optimization through data-driven strategies.*")
+    st.markdown("*This simplified dashboard provides actionable insights to drive significant revenue optimization through data-driven strategies.*")
