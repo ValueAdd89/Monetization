@@ -1153,17 +1153,28 @@ with tab_executive_summary:
     with col_exec1:
         st.markdown("#### Revenue & Customer Insights")
         # Use filtered data for insights if available
+        # Replace the problematic section around line 1157 with this:
         if not df_main_filtered.empty:
-            total_revenue = df_main_filtered['monthly_revenue'].sum() * 12  # Annualized
-            avg_conversion = df_main_filtered['conversion_rate'].mean() * 100
-            high_risk_customers = len(df_main_filtered[df_main_filtered['conversion_rate'] < 0.1])
-            revenue_at_risk = df_main_filtered[df_main_filtered['conversion_rate'] < 0.1]['monthly_revenue'].sum()
+            # Check if required columns exist before using them
+            if 'monthly_revenue' in df_main_filtered.columns:
+                total_revenue = df_main_filtered['monthly_revenue'].sum() * 12  # Annualized
+                revenue_at_risk = df_main_filtered[df_main_filtered['conversion_rate'] < 0.1]['monthly_revenue'].sum() if 'conversion_rate' in df_main_filtered.columns else 0
+            else:
+                total_revenue = 0
+                revenue_at_risk = 0
+            
+            if 'conversion_rate' in df_main_filtered.columns:
+                avg_conversion = df_main_filtered['conversion_rate'].mean() * 100
+                high_risk_customers = len(df_main_filtered[df_main_filtered['conversion_rate'] < 0.1])
+            else:
+                avg_conversion = 0
+                high_risk_customers = 0
             
             st.markdown(f"""
             - **${total_revenue:,.0f} annual revenue** from current filtered dataset.
             - **{high_risk_customers} high-risk customers** identified, representing **${revenue_at_risk:,.0f} monthly revenue at risk**.
             - **Average conversion rate: {avg_conversion:.1f}%** across filtered segments.
-            - **{df_main_filtered['plan'].value_counts().index[0] if not df_main_filtered.empty else 'Enterprise'} segment** shows highest representation in filtered data.
+            - **{df_main_filtered['plan'].value_counts().index[0] if 'plan' in df_main_filtered.columns and not df_main_filtered.empty else 'Enterprise'} segment** shows highest representation in filtered data.
             """)
         else:
             st.markdown("""
