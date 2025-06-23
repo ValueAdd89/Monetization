@@ -2101,7 +2101,7 @@ with tab_data_quality:
                 else:
                     st.success("✅ No validity issues detected!")
             
-           with quality_tab4:
+           with quality_tab4:    
                 st.markdown("### 🧹 Automated Data Cleaning Pipeline")
 
                 if uploaded_file:
