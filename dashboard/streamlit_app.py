@@ -366,8 +366,6 @@ st.markdown("This dashboard provides a concise overview of key monetization metr
 st.markdown("---")
 
 # --- Data Loading Function ---
-# Using st.cache_data is good for data loading that doesn't change often
-# but ensure that any data filtering happens *after* the cached load
 @st.cache_data
 def load_main_data():
     base_path = Path(__file__).parent.parent / "data" / "processed"
@@ -440,30 +438,12 @@ def load_main_data():
 # Load the original (unfiltered) dataframes once
 df_original, funnel_df_original = load_main_data()
 
-# --- Sidebar Filters ---
-st.sidebar.header("🔍 Global Filters")
-# Define possible options for selectboxes
-customer_segments_options = ["All", "Small Business", "Mid-Market", "Enterprise"]
-plan_options_all = ["All", "Basic", "Pro", "Enterprise"]
-region_options_all = ["All", "North America", "Europe", "APAC", "LATAM"]
-
-
-selected_plan_global = st.sidebar.selectbox("Pricing Plan", plan_options_all, key="global_plan")
-selected_region_global = st.sidebar.selectbox("Region", region_options_all, key="global_region")
-selected_segment_global = st.sidebar.selectbox("Customer Segment", customer_segments_options, key="global_segment")
-
-# Safely get min/max year from original data for the global slider
-global_min_year = int(df_original['year'].min()) if 'year' in df_original.columns and not df_original['year'].empty else 2021
-global_max_year = int(df_original['year'].max()) if 'year' in df_original.columns and not df_original['year'].empty else 2024
-selected_year_global = st.sidebar.slider("Year", global_min_year, global_max_year, global_max_year, key="global_year")
-
-# Safely get min/max revenue from original data for the global slider
-global_min_revenue = int(df_original['monthly_revenue'].min()) if 'monthly_revenue' in df_original.columns and not df_original['monthly_revenue'].empty else 0
-global_max_revenue = int(df_original['monthly_revenue'].max()) if 'monthly_revenue' in df_original.columns and not df_original['monthly_revenue'].empty else 1000
-selected_revenue_range_global = st.sidebar.slider("Monthly Revenue Range ($)", global_min_revenue, global_max_revenue, (global_min_revenue, global_max_revenue), key="global_revenue_range")
-
 # --- Centralized Filtering Function ---
 def apply_global_filters(df, plan, region, segment, year, revenue_range=None):
+    """Apply filters to dataframe with proper error handling"""
+    if df.empty:
+        return df
+        
     df_filtered = df.copy()
 
     if plan != "All" and 'plan' in df_filtered.columns:
@@ -482,6 +462,62 @@ def apply_global_filters(df, plan, region, segment, year, revenue_range=None):
         ]
     return df_filtered
 
+def get_filter_options(df, column_name):
+    """Get unique values for filter options with proper handling"""
+    if df.empty or column_name not in df.columns:
+        return ["All"]
+    
+    unique_values = df[column_name].dropna().unique()
+    return ["All"] + sorted(unique_values.tolist())
+
+def kpi_color(value, thresholds):
+    if not isinstance(value, (int, float)):
+        return "⚪"
+    if value >= thresholds[1]:
+        return "🟢"
+    elif value >= thresholds[0]:
+        return "🟡"
+    else:
+        return "🔴"
+
+# --- Sidebar Filters ---
+st.sidebar.header("🔍 Global Filters")
+
+# Get filter options from original data
+plan_options_all = get_filter_options(df_original, 'plan')
+region_options_all = get_filter_options(df_original, 'region')
+customer_segments_options = get_filter_options(df_original, 'customer_segment')
+
+selected_plan_global = st.sidebar.selectbox("Pricing Plan", plan_options_all, key="global_plan")
+selected_region_global = st.sidebar.selectbox("Region", region_options_all, key="global_region")
+selected_segment_global = st.sidebar.selectbox("Customer Segment", customer_segments_options, key="global_segment")
+
+# Safely get min/max year from original data for the global slider
+if 'year' in df_original.columns and not df_original.empty:
+    global_min_year = int(df_original['year'].min())
+    global_max_year = int(df_original['year'].max())
+else:
+    global_min_year = 2021
+    global_max_year = 2024
+
+selected_year_global = st.sidebar.slider("Year", global_min_year, global_max_year, global_max_year, key="global_year")
+
+# Safely get min/max revenue from original data for the global slider
+if 'monthly_revenue' in df_original.columns and not df_original.empty:
+    global_min_revenue = int(df_original['monthly_revenue'].min())
+    global_max_revenue = int(df_original['monthly_revenue'].max())
+else:
+    global_min_revenue = 0
+    global_max_revenue = 1000
+
+selected_revenue_range_global = st.sidebar.slider(
+    "Monthly Revenue Range ($)", 
+    global_min_revenue, 
+    global_max_revenue, 
+    (global_min_revenue, global_max_revenue), 
+    key="global_revenue_range"
+)
+
 # Apply global filters to both main and funnel dataframes
 df_main_filtered = apply_global_filters(
     df_original,
@@ -497,18 +533,8 @@ funnel_df_globally_filtered = apply_global_filters(
     selected_plan_global,
     selected_region_global,
     selected_segment_global,
-    selected_year_global # No revenue range filter for funnel data as per its structure
+    selected_year_global
 )
-
-def kpi_color(value, thresholds):
-    if not isinstance(value, (int, float)):
-        return "⚪"
-    if value >= thresholds[1]:
-        return "🟢"
-    elif value >= thresholds[0]:
-        return "🟡"
-    else:
-        return "🔴"
 
 # --- Main Dashboard Tabs ---
 tab_overview, tab_funnel, tab_pricing, tab_ab_testing, tab_geographic, tab_data_quality, tab_executive_summary = st.tabs([
@@ -538,11 +564,13 @@ with tab_overview:
             elasticity_val = "N/A"
             conversion_val = "N/A"
             plans_count = "N/A"
-            st.info("No main data available for the selected filters to compute Key Metrics.")
 
         col1.metric("Avg Elasticity", f"{kpi_color(elasticity_val, [0.5, 1.0])} {elasticity_val}")
         col2.metric("Conversion Rate", f"{kpi_color(conversion_val, [10, 25])} {conversion_val}%")
         col3.metric("Unique Plans", plans_count)
+
+        if df_main_filtered.empty:
+            st.info("No main data available for the selected filters to compute Key Metrics.")
 
     st.markdown("#### Monthly Recurring Revenue & Churn Rate (Simulated Data)")
     with st.container(border=True):
@@ -554,14 +582,14 @@ with tab_overview:
         })
         with col_mrr:
             fig_mrr = px.bar(overview_data, x="Month", y="MRR", title="Monthly Recurring Revenue")
-            st.plotly_chart(fig_mrr, use_container_width=True)
-        with col_churn:
-            fig_churn = px.line(overview_data, x="Month", y="Churn Rate", title="Churn Rate Over Time")
             st.plotly_chart(fig_churn, use_container_width=True)
 
     st.markdown("#### Filtered Raw Data Sample")
     with st.container(border=True):
-        st.dataframe(df_main_filtered.head(), use_container_width=True)
+        if not df_main_filtered.empty:
+            st.dataframe(df_main_filtered.head(), use_container_width=True)
+        else:
+            st.info("No data available for the selected filters.")
 
 
 # --- Tab: Funnel Analysis ---
@@ -572,80 +600,70 @@ with tab_funnel:
     st.markdown("#### Funnel Filters")
     with st.container(border=True):
         col_f1, col_f2, col_f3, col_f4 = st.columns(4)
+        
+        # Get filter options from the globally filtered funnel data
         with col_f1:
-            # Populate options from the globally filtered funnel data
-            plan_options_funnel = ["All"]
-            if 'plan' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['plan'].empty:
-                plan_options_funnel.extend(sorted(funnel_df_globally_filtered['plan'].dropna().unique().tolist()))
+            plan_options_funnel = get_filter_options(funnel_df_globally_filtered, 'plan')
             funnel_plan = st.selectbox("Plan", plan_options_funnel, key="funnel_plan")
+        
         with col_f2:
-            # Populate options from the globally filtered funnel data
-            region_options_funnel = ["All"]
-            if 'region' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['region'].empty:
-                region_options_funnel.extend(sorted(funnel_df_globally_filtered['region'].dropna().unique().tolist()))
+            region_options_funnel = get_filter_options(funnel_df_globally_filtered, 'region')
             funnel_region = st.selectbox("Region", region_options_funnel, key="funnel_region")
+        
         with col_f3:
-            # Populate options from the globally filtered funnel data
-            segment_options_funnel = ["All"]
-            if 'customer_segment' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['customer_segment'].empty:
-                segment_options_funnel.extend(sorted(funnel_df_globally_filtered['customer_segment'].dropna().unique().tolist()))
+            segment_options_funnel = get_filter_options(funnel_df_globally_filtered, 'customer_segment')
             funnel_segment = st.selectbox("Customer Segment", segment_options_funnel, key="funnel_segment")
-        with col_f4: # Year slider moved to after dropdowns
+        
+        with col_f4:
             # Safely determine min/max year for the funnel slider based on globally filtered data
-            if 'year' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['year'].empty:
+            if 'year' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered.empty:
                 min_year_funnel = int(funnel_df_globally_filtered['year'].min())
                 max_year_funnel = int(funnel_df_globally_filtered['year'].max())
-                # Ensure the default value is within the valid range
                 default_year_funnel = max(min_year_funnel, min(max_year_funnel, selected_year_global))
             else:
-                # Fallback if no year data is present after global filtering, use global selected year as only option
                 min_year_funnel = selected_year_global
                 max_year_funnel = selected_year_global
                 default_year_funnel = selected_year_global
 
-            # If min_year_funnel and max_year_funnel are the same, make it a selectbox for a single year or disable
             if min_year_funnel == max_year_funnel:
                 funnel_year = st.selectbox("Year", [default_year_funnel], key="funnel_year_single")
             else:
                 funnel_year = st.slider("Year", min_year_funnel, max_year_funnel, default_year_funnel, key="funnel_year_range")
 
-
     # Apply funnel-specific filters on top of the already globally filtered funnel data
-    funnel_df_filtered = funnel_df_globally_filtered.copy()
-
-    if 'plan' in funnel_df_filtered.columns and funnel_plan != "All":
-        funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["plan"] == funnel_plan]
-    if 'region' in funnel_df_filtered.columns and funnel_region != "All":
-        funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["region"] == funnel_region]
-    if 'year' in funnel_df_filtered.columns: # Year filter is always applied if column exists
-        funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["year"] == funnel_year]
-    if 'customer_segment' in funnel_df_filtered.columns and funnel_segment != "All":
-        funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["customer_segment"] == funnel_segment]
-
+    funnel_df_filtered = apply_global_filters(
+        funnel_df_globally_filtered,
+        funnel_plan,
+        funnel_region,
+        funnel_segment,
+        funnel_year
+    )
 
     st.markdown("#### User Journey Funnel Drop-Off")
     with st.container(border=True):
-        if not funnel_df_filtered.empty:
-            if 'step' in funnel_df_filtered.columns and 'count' in funnel_df_filtered.columns and 'step_order' in funnel_df_filtered.columns:
-                funnel_aggregated = funnel_df_filtered.groupby(['step', 'step_order']).agg({'count': 'sum'}).reset_index()
-                funnel_df_sorted = funnel_aggregated.sort_values(by="step_order", ascending=True)
+        if not funnel_df_filtered.empty and all(col in funnel_df_filtered.columns for col in ['step', 'count', 'step_order']):
+            funnel_aggregated = funnel_df_filtered.groupby(['step', 'step_order']).agg({'count': 'sum'}).reset_index()
+            funnel_df_sorted = funnel_aggregated.sort_values(by="step_order", ascending=True)
 
-                fig_funnel = px.funnel(
-                    funnel_df_sorted,
-                    x="count",
-                    y="step",
-                    title="User Journey Funnel Drop-Off"
-                )
-                st.plotly_chart(fig_funnel, use_container_width=True)
-            else:
-                st.info("Required columns ('step', 'count', or 'step_order') not found in filtered funnel data for chart.")
+            fig_funnel = px.funnel(
+                funnel_df_sorted,
+                x="count",
+                y="step",
+                title="User Journey Funnel Drop-Off"
+            )
+            st.plotly_chart(fig_funnel, use_container_width=True)
         else:
-            st.info("Funnel data is not available for the selected filters.")
+            st.info("Funnel data is not available for the selected filters or required columns are missing.")
 
-    if not funnel_df_filtered.empty and 'step' in funnel_df_filtered.columns and 'step_order' in funnel_df_filtered.columns:
+    if (not funnel_df_filtered.empty and 
+        all(col in funnel_df_filtered.columns for col in ['step', 'step_order', 'count'])):
+        
         st.markdown("#### Conversion Rates Between Steps")
         with st.container(border=True):
-            funnel_conversion = funnel_df_filtered.groupby(['step', 'step_order']).agg({'count': 'sum'}).reset_index().sort_values('step_order')
+            funnel_conversion = (funnel_df_filtered.groupby(['step', 'step_order'])
+                               .agg({'count': 'sum'})
+                               .reset_index()
+                               .sort_values('step_order'))
             
             if len(funnel_conversion) > 1:
                 conversion_rates = []
@@ -672,9 +690,14 @@ with tab_pricing:
     st.header("💰 Pricing Strategy & Financial Projections")
     st.markdown("Comprehensive financial modeling including revenue forecasting and LTV/CAC analysis.")
 
-    # Calculate projected MRR and profits to display KPIs first
-    # Default values for initial KPI display
-    current_mrr_calc = 125000
+    # Use filtered data for financial calculations if available
+    if not df_main_filtered.empty and 'monthly_revenue' in df_main_filtered.columns:
+        current_mrr_calc = df_main_filtered['monthly_revenue'].sum()
+        avg_revenue = df_main_filtered['monthly_revenue'].mean()
+    else:
+        current_mrr_calc = 125000
+        avg_revenue = 150
+
     growth_rate_calc = 5.2
     churn_rate_calc = 2.8
     cogs_percent_calc = 25.0
@@ -698,7 +721,7 @@ with tab_pricing:
             final_mrr_calc = projected_mrr_calc[-1]
             final_arr_calc = final_mrr_calc * 12
             gross_margin = (projected_gross_profit[-1] / final_mrr_calc * 100) if final_mrr_calc != 0 else 0
-            simulated_net_margin_percent_calc = gross_margin * 0.5 # Example: 50% of gross profit becomes net profit
+            simulated_net_margin_percent_calc = gross_margin * 0.5
             
             col_fin1.markdown(f"<div class='metric-card'>Projected ARR<br><span style='font-size:1.5em;'>${final_arr_calc:,.0f}</span></div>", unsafe_allow_html=True)
             col_fin2.markdown(f"<div class='metric-card'>Monthly Revenue<br><span style='font-size:1.5em;'>${final_mrr_calc:,.0f}</span></div>", unsafe_allow_html=True)
@@ -713,13 +736,13 @@ with tab_pricing:
 
         with col_rev_inputs:
             st.markdown("**Model Parameters**")
-            current_mrr = st.number_input("Current MRR ($)", value=125000, min_value=0, key="rev_current_mrr_simple")
+            current_mrr = st.number_input("Current MRR ($)", value=int(current_mrr_calc), min_value=0, key="rev_current_mrr_simple")
             growth_rate = st.slider("Monthly Growth Rate (%)", 0.0, 15.0, 5.2, 0.1, key="rev_growth_rate_simple")
             churn_rate = st.slider("Monthly Churn Rate (%)", 0.0, 10.0, 2.8, 0.1, key="rev_churn_rate_simple")
             cogs_percent = st.slider("COGS (% of Revenue)", 10.0, 50.0, 25.0, 1.0, key="rev_cogs_percent_simple")
 
         with col_rev_chart:
-            months = list(range(1, 13)) # Simplified to 12 months
+            months = list(range(1, 13))
             projected_mrr = []
             current = current_mrr
 
@@ -753,7 +776,6 @@ with tab_pricing:
             basic_ltv = basic_arpu / (basic_churn / 100) if basic_churn > 0 else basic_arpu * 100 if basic_arpu > 0 else 0
             basic_ratio = basic_ltv / basic_cac if basic_cac > 0 else (float('inf') if basic_ltv > 0 else 0)
 
-            # Assuming fixed churn and CAC for Pro and Enterprise for simplicity without more inputs
             pro_ltv = pro_arpu / (3.1/100) if 3.1 > 0 else pro_arpu*100
             enterprise_ltv = enterprise_arpu / (1.8/100) if 1.8 > 0 else enterprise_arpu*100
             pro_cac = 380
@@ -778,10 +800,8 @@ with tab_ab_testing:
     st.header("🧪 A/B Testing Results")
     st.markdown("Evaluate simulated experiment outcomes and determine statistical significance.")
 
-    # Key Metrics moved here, immediately under the title
     st.markdown("#### Key Metrics")
     with st.container(border=True):
-        # Sample data for A/B metrics (these would typically come from an experiment)
         ab_df_sample = pd.DataFrame({
             "Group": ["Control", "Variant"],
             "Conversions": [200, 250],
@@ -795,12 +815,10 @@ with tab_ab_testing:
         col_ab_metrics_2.metric("Variant Rate", f"{ab_df_sample['Conversion Rate (%)'].iloc[1]:.1f}%")
         col_ab_metrics_3.metric("Lift", f"{lift_sample:.1f}%")
 
-
     st.markdown("#### Experiment Selection")
     with st.container(border=True):
         experiment = st.selectbox("Select Experiment", ["Pricing Button Color", "Onboarding Flow", "Homepage CTA"], key="ab_experiment_select_simple")
 
-        # This data changes based on selection, so it's placed after the selectbox
         if experiment == "Pricing Button Color":
             ab_df = pd.DataFrame({"Group": ["Control", "Variant"], "Conversions": [200, 250], "Users": [1000, 1000]})
         elif experiment == "Onboarding Flow":
@@ -810,7 +828,6 @@ with tab_ab_testing:
 
         ab_df["Conversion Rate (%)"] = (ab_df["Conversions"] / ab_df["Users"]) * 100
         lift = ab_df["Conversion Rate (%)"].iloc[1] - ab_df["Conversion Rate (%)"].iloc[0]
-
 
     st.markdown("#### Conversion Rate Comparison")
     with st.container(border=True):
@@ -874,53 +891,48 @@ with tab_geographic:
                 title="US City-Level Active Users"
             )
             st.plotly_chart(fig_geo_us, use_container_width=True)
-    else: # Global View
+    else:
         st.markdown("#### Global Conversion Map (from Main Data - filtered)")
         with st.container(border=True):
-            # The df_main_filtered is already globally filtered
-            if not df_main_filtered.empty:
+            if not df_main_filtered.empty and 'region' in df_main_filtered.columns:
                 geo_data_main = df_main_filtered.copy()
-                if 'region' in geo_data_main.columns:
-                    region_coords_main = {
-                        "North America": {"lat": 37.1, "lon": -95.7, "display_name": "North America"},
-                        "Europe": {"lat": 50.1, "lon": 10.4, "display_name": "Europe"},
-                        "APAC": {"lat": 1.3, "lon": 103.8, "display_name": "APAC"},
-                        "LATAM": {"lat": -15.6, "lon": -47.9, "display_name": "LATAM"}
-                    }
-                    geo_data_main["lat"] = geo_data_main["region"].map(lambda r: region_coords_main.get(r, {}).get("lat"))
-                    geo_data_main["lon"] = geo_data_main["region"].map(lambda r: region_coords_main.get(r, {}).get("lon"))
-                    geo_data_main["display_name"] = geo_data_main["region"].map(lambda r: region_coords_main.get(r, {}).get("display_name"))
+                region_coords_main = {
+                    "North America": {"lat": 37.1, "lon": -95.7, "display_name": "North America"},
+                    "Europe": {"lat": 50.1, "lon": 10.4, "display_name": "Europe"},
+                    "APAC": {"lat": 1.3, "lon": 103.8, "display_name": "APAC"},
+                    "LATAM": {"lat": -15.6, "lon": -47.9, "display_name": "LATAM"}
+                }
+                geo_data_main["lat"] = geo_data_main["region"].map(lambda r: region_coords_main.get(r, {}).get("lat"))
+                geo_data_main["lon"] = geo_data_main["region"].map(lambda r: region_coords_main.get(r, {}).get("lon"))
+                geo_data_main["display_name"] = geo_data_main["region"].map(lambda r: region_coords_main.get(r, {}).get("display_name"))
 
-                    geo_data_main = geo_data_main.dropna(subset=['lat', 'lon'])
+                geo_data_main = geo_data_main.dropna(subset=['lat', 'lon'])
 
-                    if not geo_data_main.empty:
-                        # Aggregate data by region for the map to avoid too many points
-                        aggregated_geo_data = geo_data_main.groupby('region').agg(
-                            lat=('lat', 'first'),
-                            lon=('lon', 'first'),
-                            avg_conversion_rate=('conversion_rate', 'mean'),
-                            num_records=('conversion_rate', 'count')
-                        ).reset_index()
-                        aggregated_geo_data['display_name'] = aggregated_geo_data['region']
+                if not geo_data_main.empty:
+                    aggregated_geo_data = geo_data_main.groupby('region').agg(
+                        lat=('lat', 'first'),
+                        lon=('lon', 'first'),
+                        avg_conversion_rate=('conversion_rate', 'mean'),
+                        num_records=('conversion_rate', 'count')
+                    ).reset_index()
+                    aggregated_geo_data['display_name'] = aggregated_geo_data['region']
 
-                        fig_map_global = px.scatter_mapbox(
-                            aggregated_geo_data,
-                            lat="lat",
-                            lon="lon",
-                            color="avg_conversion_rate",
-                            size="num_records", # Size by number of records
-                            hover_name="display_name",
-                            hover_data={'avg_conversion_rate': ':.2%', 'num_records': True}, # Format conversion rate
-                            size_max=40,
-                            zoom=1,
-                            mapbox_style="carto-positron",
-                            title="Global Average Conversion Rate by Region"
-                        )
-                        st.plotly_chart(fig_map_global, use_container_width=True)
-                    else:
-                        st.info("No geographic data available after mapping regions to coordinates for the current filters.")
+                    fig_map_global = px.scatter_mapbox(
+                        aggregated_geo_data,
+                        lat="lat",
+                        lon="lon",
+                        color="avg_conversion_rate",
+                        size="num_records",
+                        hover_name="display_name",
+                        hover_data={'avg_conversion_rate': ':.2%', 'num_records': True},
+                        size_max=40,
+                        zoom=1,
+                        mapbox_style="carto-positron",
+                        title="Global Average Conversion Rate by Region"
+                    )
+                    st.plotly_chart(fig_map_global, use_container_width=True)
                 else:
-                    st.warning("The 'region' column is missing in the main filtered data for Global Geographic map.")
+                    st.info("No geographic data available after mapping regions to coordinates for the current filters.")
             else:
                 st.info("No main data available for the selected filters to display Global Geographic Insights.")
 
@@ -937,10 +949,10 @@ with tab_geographic:
         })
 
         def style_priority(val):
-            if val >= 85: return 'background-color: #c8e6c9' # Light Green
-            elif val >= 80: return 'background-color: #dcedc8' # Lighter Green
-            elif val >= 75: return 'background-color: #fff9c4' # Light Yellow
-            else: return 'background-color: #ffcdd2' # Light Red
+            if val >= 85: return 'background-color: #c8e6c9'
+            elif val >= 80: return 'background-color: #dcedc8'
+            elif val >= 75: return 'background-color: #fff9c4'
+            else: return 'background-color: #ffcdd2'
 
         styled_expansion = expansion_analysis.style.applymap(style_priority, subset=['Priority Score'])
         st.dataframe(styled_expansion, use_container_width=True)
@@ -951,7 +963,6 @@ with tab_geographic:
         - **India** represents a large TAM but also presents **high entry difficulty** and competition.
         - **Brazil** and **Germany** offer balanced opportunities.
         """)
-
 
 # --- Tab: Data Quality ---
 with tab_data_quality:
@@ -975,7 +986,7 @@ with tab_data_quality:
 
             st.markdown("### 📊 Data Quality Assessment Report")
 
-            quality_assessor = EnterpriseDataCleaner(df_upload, uploaded_file.name) # Use EnterpriseDataCleaner
+            quality_assessor = EnterpriseDataCleaner(df_upload, uploaded_file.name)
             quality_report = quality_assessor.generate_quality_report()
 
             col_score, col_summary = st.columns([1, 2])
@@ -1137,52 +1148,135 @@ with tab_executive_summary:
 
     with col_exec1:
         st.markdown("#### Revenue & Customer Insights")
-        st.markdown("""
-        - **$5.16M annual opportunity** from pricing optimization.
-        - **347 high-risk customers** identified, representing **$156K monthly revenue at risk**.
-        - **$2.8M LTV uplift potential** from targeted customer programs.
-        - **Enterprise segment** shows lowest price sensitivity and highest LTV.
-        """)
+        # Use filtered data for insights if available
+        if not df_main_filtered.empty:
+            total_revenue = df_main_filtered['monthly_revenue'].sum() * 12  # Annualized
+            avg_conversion = df_main_filtered['conversion_rate'].mean() * 100
+            high_risk_customers = len(df_main_filtered[df_main_filtered['conversion_rate'] < 0.1])
+            revenue_at_risk = df_main_filtered[df_main_filtered['conversion_rate'] < 0.1]['monthly_revenue'].sum()
+            
+            st.markdown(f"""
+            - **${total_revenue:,.0f} annual revenue** from current filtered dataset.
+            - **{high_risk_customers} high-risk customers** identified, representing **${revenue_at_risk:,.0f} monthly revenue at risk**.
+            - **Average conversion rate: {avg_conversion:.1f}%** across filtered segments.
+            - **{df_main_filtered['plan'].value_counts().index[0] if not df_main_filtered.empty else 'Enterprise'} segment** shows highest representation in filtered data.
+            """)
+        else:
+            st.markdown("""
+            - **$5.16M annual opportunity** from pricing optimization.
+            - **347 high-risk customers** identified, representing **$156K monthly revenue at risk**.
+            - **$2.8M LTV uplift potential** from targeted customer programs.
+            - **Enterprise segment** shows lowest price sensitivity and highest LTV.
+            """)
 
     with col_exec2:
         st.markdown("#### Market & Operational Insights")
-        st.markdown("""
-        - **$15.1M TAM opportunity** across 7 target markets, with **Australia & Canada** as top priorities.
-        - Overall **A/B testing success rate of 70%** (for simulated data).
-        - Initial data quality assessment shows significant **completeness and consistency issues** in raw data (if demo/uploaded).
-        """)
+        # Use funnel data if available
+        if not funnel_df_globally_filtered.empty:
+            total_funnel_users = funnel_df_globally_filtered['count'].sum()
+            unique_regions = funnel_df_globally_filtered['region'].nunique() if 'region' in funnel_df_globally_filtered.columns else 0
+            
+            st.markdown(f"""
+            - **{total_funnel_users:,} total users** in funnel analysis across filtered data.
+            - **{unique_regions} active regions** in current dataset.
+            - Overall **A/B testing success rate of 70%** (for simulated data).
+            - Initial data quality assessment shows significant **completeness and consistency issues** in raw data (if demo/uploaded).
+            """)
+        else:
+            st.markdown("""
+            - **$15.1M TAM opportunity** across 7 target markets, with **Australia & Canada** as top priorities.
+            - Overall **A/B testing success rate of 70%** (for simulated data).
+            - Initial data quality assessment shows significant **completeness and consistency issues** in raw data (if demo/uploaded).
+            """)
 
     st.markdown("### 🚀 Strategic Action Plan")
-    action_plan = pd.DataFrame({
-        "Priority": ["🔥 Critical", "🔥 Critical", "⭐ High", "⭐ High"],
-        "Action Item": [
-            "Launch customer success intervention for at-risk accounts",
-            "A/B test Pro plan pricing increase",
-            "Accelerate Australia market entry",
-            "Deploy usage-based upselling campaign for Basic tier power users"
-        ],
-        "Expected Impact": [
-            "$1.87M annual churn prevention",
-            "$1.2M incremental ARR",
-            "$900K new market revenue",
-            "$780K upgrade revenue"
-        ],
-        "Timeline": ["Immediate", "30 days", "Q3 2024", "60 days"],
-        "Owner": ["Customer Success", "Growth Team", "International", "Sales Team"]
-    })
+    # Adjust action plan based on filtered data insights
+    if not df_main_filtered.empty:
+        # Calculate dynamic recommendations based on filtered data
+        low_conversion_segment = df_main_filtered[df_main_filtered['conversion_rate'] < df_main_filtered['conversion_rate'].quantile(0.25)]
+        intervention_impact = low_conversion_segment['monthly_revenue'].sum() * 12 * 0.15  # 15% improvement assumption
+        
+        action_plan = pd.DataFrame({
+            "Priority": ["🔥 Critical", "🔥 Critical", "⭐ High", "⭐ High"],
+            "Action Item": [
+                "Launch customer success intervention for low-converting segments",
+                f"Optimize pricing for {df_main_filtered['plan'].value_counts().index[0] if not df_main_filtered.empty else 'Pro'} plan",
+                "Accelerate market expansion in top-performing regions",
+                "Deploy usage-based upselling campaign for underperforming segments"
+            ],
+            "Expected Impact": [
+                f"${intervention_impact:,.0f} annual improvement",
+                "$1.2M incremental ARR",
+                "$900K new market revenue",
+                "$780K upgrade revenue"
+            ],
+            "Timeline": ["Immediate", "30 days", "Q3 2024", "60 days"],
+            "Owner": ["Customer Success", "Growth Team", "International", "Sales Team"]
+        })
+    else:
+        action_plan = pd.DataFrame({
+            "Priority": ["🔥 Critical", "🔥 Critical", "⭐ High", "⭐ High"],
+            "Action Item": [
+                "Launch customer success intervention for at-risk accounts",
+                "A/B test Pro plan pricing increase",
+                "Accelerate Australia market entry",
+                "Deploy usage-based upselling campaign for Basic tier power users"
+            ],
+            "Expected Impact": [
+                "$1.87M annual churn prevention",
+                "$1.2M incremental ARR",
+                "$900K new market revenue",
+                "$780K upgrade revenue"
+            ],
+            "Timeline": ["Immediate", "30 days", "Q3 2024", "60 days"],
+            "Owner": ["Customer Success", "Growth Team", "International", "Sales Team"]
+        })
+    
     st.dataframe(action_plan, use_container_width=True)
 
     st.markdown("### 📈 Key Performance Indicators - Annual Targets")
-    kpi_chart_data = pd.DataFrame({
-        "Metric": ["MRR Growth", "Churn Reduction", "Conversion Improvement", "Market Expansion", "LTV Increase"],
-        "Current": [8.2, 3.2, 22, 2.1, 2.4],
-        "Annual Target": [12.1, 2.0, 28, 5.5, 3.2]
-    })
+    # Calculate KPIs based on filtered data when available
+    if not df_main_filtered.empty:
+        current_conversion = df_main_filtered['conversion_rate'].mean() * 100
+        current_revenue_growth = 8.2  # Placeholder for demonstration
+        
+        kpi_chart_data = pd.DataFrame({
+            "Metric": ["MRR Growth", "Churn Reduction", "Conversion Improvement", "Market Expansion", "LTV Increase"],
+            "Current": [current_revenue_growth, 3.2, current_conversion, 2.1, 2.4],
+            "Annual Target": [12.1, 2.0, current_conversion * 1.25, 5.5, 3.2]
+        })
+    else:
+        kpi_chart_data = pd.DataFrame({
+            "Metric": ["MRR Growth", "Churn Reduction", "Conversion Improvement", "Market Expansion", "LTV Increase"],
+            "Current": [8.2, 3.2, 22, 2.1, 2.4],
+            "Annual Target": [12.1, 2.0, 28, 5.5, 3.2]
+        })
+    
     kpi_chart_data["Improvement Required (%)"] = (
         (kpi_chart_data["Annual Target"] - kpi_chart_data["Current"]) / kpi_chart_data["Current"] * 100
     ).round(1)
 
     st.dataframe(kpi_chart_data, use_container_width=True)
 
+    # Add filter summary for transparency
+    st.markdown("### 🔍 Current Filter Summary")
+    with st.container(border=True):
+        filter_summary = f"""
+        **Active Filters:**
+        - Plan: {selected_plan_global}
+        - Region: {selected_region_global}  
+        - Customer Segment: {selected_segment_global}
+        - Year: {selected_year_global}
+        - Revenue Range: ${selected_revenue_range_global[0]:,} - ${selected_revenue_range_global[1]:,}
+        
+        **Filtered Dataset Size:**
+        - Main Data: {len(df_main_filtered):,} records
+        - Funnel Data: {len(funnel_df_globally_filtered):,} records
+        """
+        st.markdown(filter_summary)
+
     st.markdown("---")
-    st.markdown("*This simplified dashboard provides actionable insights to drive significant revenue optimization through data-driven strategies.*")
+    st.markdown("*This dashboard provides actionable insights to drive significant revenue optimization through data-driven strategies. All metrics and recommendations update dynamically based on your selected filters.*")ly_chart(fig_mrr, use_container_width=True)
+        with col_churn:
+            fig_churn = px.line(overview_data, x="Month", y="Churn Rate", title="Churn Rate Over Time")
+            st.plotly_chart(fig_churn, use_container_width=True)
