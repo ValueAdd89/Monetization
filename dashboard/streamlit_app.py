@@ -573,8 +573,7 @@ with tab_overview:
         st.dataframe(df_main_filtered.head(), use_container_width=True) # Displaying head for brevity
 
 
----
-# Tab: Funnel Analysis
+# --- Tab: Funnel Analysis
 with tab_funnel:
     st.header("🔄 Funnel Analysis")
     st.markdown("Analyze user journey drop-offs and conversion rates at each stage.")
@@ -643,8 +642,7 @@ with tab_funnel:
             else:
                 st.info("Not enough funnel steps to calculate conversion rates.")
 
----
-# Tab: Pricing & Financials
+# --- Tab: Pricing & Financials
 with tab_pricing:
     st.header("💰 Pricing Strategy & Financial Projections")
     st.markdown("Comprehensive financial modeling including revenue forecasting and LTV/CAC analysis.")
@@ -707,8 +705,7 @@ with tab_pricing:
                                      hover_data=['LTV/CAC Ratio'])
             st.plotly_chart(fig_ltv_cac, use_container_width=True)
 
----
-# Tab: A/B Testing
+# --- Tab: A/B Testing
 with tab_ab_testing:
     st.header("🧪 A/B Testing Results")
     st.markdown("Evaluate simulated experiment outcomes and determine statistical significance.")
@@ -762,8 +759,7 @@ with tab_ab_testing:
         st.markdown(f"🧮 **Estimated Required Sample per Group:** `{sample_size}`")
         st.caption("Assumes equal-sized control and variant groups.")
 
----
-# Tab: Data Quality
+# --- Tab: Data Quality
 with tab_data_quality:
     st.header("🛠️ Data Quality Assessment")
     st.markdown("**Demonstrating enterprise-grade data quality management and real-world data complexity handling**")
@@ -937,8 +933,7 @@ with tab_data_quality:
                         key="download_cleaned_demo_data_btn"
                     )
 
----
-# Tab: Executive Summary
+# --- Tab: Executive Summary
 with tab_executive_summary:
     st.header("📋 Executive Summary & Strategic Action Plan")
     st.markdown("A consolidated view of key findings, strategic actions, and success metrics.")
