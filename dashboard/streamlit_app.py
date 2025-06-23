@@ -2246,7 +2246,7 @@ with tab_ml_insights:
                                     )
 
 
-# === COMPREHENSIVE EXECUTIVE SUMMARY SECTION ===
+# === EXECUTIVE SUMMARY SECTION === 
 st.markdown("---")
 st.markdown("## 📋 Executive Summary & Strategic Action Plan")
 
@@ -2256,63 +2256,64 @@ exec_summary_tab1, exec_summary_tab2, exec_summary_tab3 = st.tabs([
 
 with exec_summary_tab1:
     col_exec1, col_exec2, col_exec3 = st.columns(3)
-    
+
     with col_exec1:
         st.markdown("### 💰 Revenue Optimization")
         st.markdown("""
-        **Immediate Opportunities**
-        - **$5.16M annual opportunity** identified through pricing optimization
-        - **23% pricing elasticity improvement** potential across all tiers
-        - **15% conversion gap** vs industry benchmark in trial-to-paid funnel
-        
-        **Key Insights**
-        - Enterprise segment shows lowest price sensitivity (-0.6 elasticity)
-        - Pro plan has highest optimization potential (+$1.2M ARR)
-        - Geographic pricing disparities create arbitrage opportunities
-        
-        **Risk Mitigation**
-        - A/B testing framework reduces implementation risk to <5%
-        - Gradual rollout strategy protects against customer backlash
-        - Competitive analysis shows 20% pricing headroom in premium segments
-        """)
-    
+**Immediate Opportunities**
+- **$5.16M annual opportunity** identified through pricing optimization
+- **23% pricing elasticity improvement** potential across all tiers
+- **15% conversion gap** vs industry benchmark in trial-to-paid funnel
+
+**Key Insights**
+- Enterprise segment shows lowest price sensitivity (-0.6 elasticity)
+- Pro plan has highest optimization potential (+$1.2M ARR)
+- Geographic pricing disparities create arbitrage opportunities
+
+**Risk Mitigation**
+- A/B testing framework reduces implementation risk to <5%
+- Gradual rollout strategy protects against customer backlash
+- Competitive analysis shows 20% pricing headroom in premium segments
+""")
+
     with col_exec2:
         st.markdown("### 🎯 Customer Intelligence")
         st.markdown("""
-        **At-Risk Customer Portfolio**
-        - **347 high-risk customers** requiring immediate intervention
-        - **$156K monthly revenue** at immediate risk of churn
-        - **68% historical retention success** rate with proactive outreach
-        
-        **Growth Opportunities**
-        - **$2.8M LTV uplift potential** from targeted customer optimization
-        - **150 high-usage Basic users** ready for Pro plan upgrade
-        - **25 Enterprise trial extensions** with 60% conversion probability
-        
-        **Predictive Insights**
-        - Usage decline is strongest churn predictor (32%)
-        - Support ticket volume correlation with churn risk (+85%)
-        - Feature adoption score predicts LTV with 76% accuracy
-        """)
-    
+**At-Risk Customer Portfolio**
+- **347 high-risk customers** requiring immediate intervention
+- **$156K monthly revenue** at immediate risk of churn
+- **68% historical retention success** rate with proactive outreach
+
+**Growth Opportunities**
+- **$2.8M LTV uplift potential** from targeted customer optimization
+- **150 high-usage Basic users** ready for Pro plan upgrade
+- **25 Enterprise trial extensions** with 60% conversion probability
+
+**Predictive Insights**
+- Usage decline is strongest churn predictor (32%)
+- Support ticket volume correlation with churn risk (+85%)
+- Feature adoption score predicts LTV with 76% accuracy
+""")
+
     with col_exec3:
         st.markdown("### 🌍 Market Expansion")
         st.markdown("""
-        **Global Growth Strategy**
-        - **$15.1M TAM opportunity** across 7 target markets
-        - **Australia & Canada** identified as Tier 1 expansion priorities
-        - **3-year ROI projections** range from 200% to 450%
-        
-        **Regional Performance**
-        - **North America**: Market leader but saturation concerns
-        - **Europe**: Strong retention (2.1% churn) but slow sales cycles
-        - **APAC**: Highest growth (+35% QoQ) with localization needs
-        
-        **Investment Requirements**
-        - **$2.25M total investment** across priority markets
-        - **Break-even timelines** between 5-15 months
-        - **Partner-led approach** reduces initial capital requirements by 40%
-        """)
+**Global Growth Strategy**
+- **$15.1M TAM opportunity** across 7 target markets
+- **Australia & Canada** identified as Tier 1 expansion priorities
+- **3-year ROI projections** range from 200% to 450%
+
+**Regional Performance**
+- **North America**: Market leader but saturation concerns
+- **Europe**: Strong retention (2.1% churn) but slow sales cycles
+- **APAC**: Highest growth (+35% QoQ) with localization needs
+
+**Investment Requirements**
+- **$2.25M total investment** across priority markets
+- **Break-even timelines** between 5–15 months
+- **Partner-led approach** reduces initial capital requirements by 40%
+""")
+
 
 with exec_summary_tab2:
     st.markdown("### 🚀 Strategic Action Plan")
