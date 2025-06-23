@@ -2027,403 +2027,403 @@ with tab_ml_insights:
                         st.markdown(f"**🚀 Action Plan**: {metrics['action']}")
 
    # --- NEW TAB: DATA QUALITY ===
-with tab_data_quality:
-    st.header("🛠️ Data Quality Assessment")
-    st.markdown("**Demonstrating enterprise-grade data quality management and real-world data complexity handling**")
+    with tab_data_quality:
+        st.header("🛠️ Data Quality Assessment")
+        st.markdown("**Demonstrating enterprise-grade data quality management and real-world data complexity handling**")
     
-    uploaded_file = st.file_uploader(
-        "Upload your own dataset for quality analysis", 
-        type=['csv', 'xlsx'],
-        help="Upload a CSV or Excel file to see real-world data quality assessment in action"
-    )
+        uploaded_file = st.file_uploader(
+            "Upload your own dataset for quality analysis", 
+            type=['csv', 'xlsx'],
+            help="Upload a CSV or Excel file to see real-world data quality assessment in action"
+        )
     
-    if uploaded_file is not None:
-        try:
-            if uploaded_file.name.endswith('.csv'):
-                df_upload = pd.read_csv(uploaded_file)
-            else:
-                df_upload = pd.read_excel(uploaded_file)
-            
-            st.success(f"✅ Successfully loaded {df_upload.shape[0]} rows and {df_upload.shape[1]} columns")
-            
-            st.markdown("### 📊 Data Quality Assessment Report")
-            
-            quality_assessor = DataQualityAssessment(df_upload, uploaded_file.name)
-            quality_report = quality_assessor.generate_quality_report()
-            
-            col_score, col_summary = st.columns([1, 2])
-            
-            with col_score:
-                score = quality_report['overall_score']
-                score_color_emoji = "🟢" if score >= 80 else "🟡" if score >= 60 else "🔴"
-                st.metric("Overall Quality Score", f"{score_color_emoji} {score}/100")
-            
-            with col_summary:
-                completeness_avg = np.mean([v['completeness_score'] for v in quality_report['completeness'].values()])
-                consistency_issues = len(quality_report['consistency'])
-                validity_issues = len(quality_report['validity'])
+        if uploaded_file is not None:
+            try:
+                if uploaded_file.name.endswith('.csv'):
+                    df_upload = pd.read_csv(uploaded_file)
+                else:
+                    df_upload = pd.read_excel(uploaded_file)
                 
-                st.markdown(f"""
-                **Quality Summary:**
-                - Average Completeness: {completeness_avg:.1f}%
-                - Consistency Issues Detected: {consistency_issues}
-                - Validity Issues Detected: {validity_issues}
-                - Duplicate Records: {quality_report['duplicates']['total_duplicates']}
-                """)
-            
-            quality_tab1, quality_tab2, quality_tab3, quality_tab4 = st.tabs([
-                "Completeness", "Consistency Issues", "Validity Issues", "Data Cleaning Pipeline"
-            ])
-            
-            with quality_tab1:
-                st.markdown("### 📈 Data Completeness Analysis")
+                st.success(f"✅ Successfully loaded {df_upload.shape[0]} rows and {df_upload.shape[1]} columns")
                 
-                completeness_df = pd.DataFrame([
-                    {
-                        'Column': col,
-                        'Missing Count': data['missing_count'],
-                        'Missing %': f"{data['missing_percentage']:.1f}%",
-                        'Completeness Score': f"{data['completeness_score']:.1f}%"
-                    }
-                    for col, data in quality_report['completeness'].items()
+                st.markdown("### 📊 Data Quality Assessment Report")
+                
+                quality_assessor = DataQualityAssessment(df_upload, uploaded_file.name)
+                quality_report = quality_assessor.generate_quality_report()
+                
+                col_score, col_summary = st.columns([1, 2])
+                
+                with col_score:
+                    score = quality_report['overall_score']
+                    score_color_emoji = "🟢" if score >= 80 else "🟡" if score >= 60 else "🔴"
+                    st.metric("Overall Quality Score", f"{score_color_emoji} {score}/100")
+            
+                with col_summary:
+                    completeness_avg = np.mean([v['completeness_score'] for v in quality_report['completeness'].values()])
+                    consistency_issues = len(quality_report['consistency'])
+                    validity_issues = len(quality_report['validity'])
+                    
+                    st.markdown(f"""
+                    **Quality Summary:**
+                    - Average Completeness: {completeness_avg:.1f}%
+                    - Consistency Issues Detected: {consistency_issues}
+                    - Validity Issues Detected: {validity_issues}
+                    - Duplicate Records: {quality_report['duplicates']['total_duplicates']}
+                    """)
+                
+                quality_tab1, quality_tab2, quality_tab3, quality_tab4 = st.tabs([
+                    "Completeness", "Consistency Issues", "Validity Issues", "Data Cleaning Pipeline"
                 ])
-                
-                st.dataframe(completeness_df, use_container_width=True)
-                
-                worst_completeness = min(quality_report['completeness'].values(), key=lambda x: x['completeness_score'])
-                worst_column = [k for k, v in quality_report['completeness'].items() if v == worst_completeness][0]
-                
-                st.markdown(f"""
-                **💡 Completeness Insights:**
-                - Most incomplete column: **{worst_column}** ({worst_completeness['completeness_score']:.1f}% complete)
-                - Total missing values: **{sum(v['missing_count'] for v in quality_report['completeness'].values()):,}**
-                - Recommended action: {'Investigate data collection process' if worst_completeness['completeness_score'] < 70 else 'Monitor and maintain current quality'}
-                """)
             
-            with quality_tab2:
-                st.markdown("### ⚠️ Consistency Issues")
-                
-                if quality_report['consistency']:
-                    consistency_df = pd.DataFrame(quality_report['consistency'])
-                    st.dataframe(consistency_df, use_container_width=True)
+                with quality_tab1:
+                    st.markdown("### 📈 Data Completeness Analysis")
                     
-                    high_severity = [issue for issue in quality_report['consistency'] if issue['severity'] == 'High']
-                    medium_severity = [issue for issue in quality_report['consistency'] if issue['severity'] == 'Medium']
-                    
-                    if high_severity:
-                        st.error(f"🚨 **{len(high_severity)} High Severity Issues** - Immediate attention required")
-                    if medium_severity:
-                        st.warning(f"⚠️ **{len(medium_severity)} Medium Severity Issues** - Should be addressed")
-                else:
-                    st.success("✅ No consistency issues detected!")
-            
-            with quality_tab3:
-                st.markdown("### 🎯 Validity Issues")
+                    completeness_df = pd.DataFrame([
+                        {
+                            'Column': col,
+                            'Missing Count': data['missing_count'],
+                            'Missing %': f"{data['missing_percentage']:.1f}%",
+                            'Completeness Score': f"{data['completeness_score']:.1f}%"
+                        }
+                        for col, data in quality_report['completeness'].items()
+                    ])
                 
-                if quality_report['validity']:
-                    validity_df = pd.DataFrame(quality_report['validity'])
-                    st.dataframe(validity_df, use_container_width=True)
-                else:
-                    st.success("✅ No validity issues detected!")
+                    st.dataframe(completeness_df, use_container_width=True)
+                    
+                    worst_completeness = min(quality_report['completeness'].values(), key=lambda x: x['completeness_score'])
+                    worst_column = [k for k, v in quality_report['completeness'].items() if v == worst_completeness][0]
+                    
+                    st.markdown(f"""
+                    **💡 Completeness Insights:**
+                    - Most incomplete column: **{worst_column}** ({worst_completeness['completeness_score']:.1f}% complete)
+                    - Total missing values: **{sum(v['missing_count'] for v in quality_report['completeness'].values()):,}**
+                    - Recommended action: {'Investigate data collection process' if worst_completeness['completeness_score'] < 70 else 'Monitor and maintain current quality'}
+                    """)
+                
+                with quality_tab2:
+                    st.markdown("### ⚠️ Consistency Issues")
+                    
+                    if quality_report['consistency']:
+                        consistency_df = pd.DataFrame(quality_report['consistency'])
+                        st.dataframe(consistency_df, use_container_width=True)
+                        
+                        high_severity = [issue for issue in quality_report['consistency'] if issue['severity'] == 'High']
+                        medium_severity = [issue for issue in quality_report['consistency'] if issue['severity'] == 'Medium']
+                        
+                        if high_severity:
+                            st.error(f"🚨 **{len(high_severity)} High Severity Issues** - Immediate attention required")
+                        if medium_severity:
+                            st.warning(f"⚠️ **{len(medium_severity)} Medium Severity Issues** - Should be addressed")
+                    else:
+                        st.success("✅ No consistency issues detected!")
+                
+                with quality_tab3:
+                    st.markdown("### 🎯 Validity Issues")
+                    
+                    if quality_report['validity']:
+                        validity_df = pd.DataFrame(quality_report['validity'])
+                        st.dataframe(validity_df, use_container_width=True)
+                    else:
+                        st.success("✅ No validity issues detected!")
+                
+                with quality_tab4:
+                    st.markdown("### 🧹 Automated Data Cleaning Pipeline")
+    
+                    # The problem was likely in the indentation of the 'else' related to 'if uploaded_file is not None:'
+                    # This 'if' and its 'else' should be at the same level as the 'st.markdown("### Automated Data Cleaning Pipeline")'
+                    if uploaded_file is not None:
+                        if st.button("Run Data Cleaning Pipeline", type="primary", key="run_cleaning_btn_uploaded"): # Added _uploaded key
+                            with st.spinner("Cleaning data..."):
+                                try:
+                                    cleaner = EnterpriseDataCleaner(df_upload)
+    
+                                    cleaned_df = cleaner.standardize_column_names()
+                                    cleaned_df = cleaner.handle_missing_values()
+                                    cleaned_df = cleaner.standardize_categorical_values()
+                                    cleaned_df = cleaner.validate_business_rules()
+                                    cleaned_df = cleaner.remove_outliers()
+    
+                                    cleaning_report = cleaner.generate_cleaning_report()
+    
+                                    st.success("✅ Data cleaning completed!")
+    
+                                    col_before, col_after = st.columns(2)
+    
+                                    with col_before:
+                                        st.markdown("**Before Cleaning:**")
+                                        st.metric("Rows", f"{cleaning_report['original_shape'][0]:,}")
+                                        st.metric("Columns", cleaning_report['original_shape'][1])
+    
+                                    with col_after:
+                                        st.markdown("**After Cleaning:**")
+                                        st.metric("Rows", f"{cleaning_report['final_shape'][0]:,}",
+                                                  f"{cleaning_report['rows_changed']:+,}")
+                                        st.metric("Columns", cleaning_report['final_shape'][1],
+                                                  f"{cleaning_report['columns_changed']:+,}")
+    
+                                    st.markdown("### 📋 Cleaning Steps Performed")
+                                    for step in cleaning_report['cleaning_steps']:
+                                        st.markdown(f"**{step['step']}**: {step['description']} ({step['changes']} changes)")
+    
+                                    csv_data = cleaned_df.to_csv(index=False).encode('utf-8')
+                                    st.download_button(
+                                        label="📥 Download Cleaned Dataset",
+                                        data=csv_data,
+                                        file_name=f"cleaned_{uploaded_file.name.replace('.csv', '').replace('.xlsx', '')}.csv",
+                                        mime="text/csv",
+                                        key="download_cleaned_data_btn_uploaded" # Added _uploaded key
+                                    )
+                                except Exception as e:
+                                    st.error(f"An error occurred during cleaning: {e}")
+    
+                            st.markdown("*This demonstrates the process of programmatically cleaning and validating messy datasets to ensure data reliability for critical business decisions.*")
+    
+                    else: # This 'else' correctly aligns with 'if uploaded_file is not None:'
+                        st.markdown("### 🎲 Demo: Data Quality Assessment with Messy Data")
+                        st.info("Upload your own dataset above, or click the button below to explore a demo with intentionally messy synthetic data.")
+    
+                        if st.button("Generate Messy Demo Dataset", key="generate_messy_demo_btn"):
+                            messy_data = create_messy_demo_dataset()
+    
+                            st.markdown("**Generated messy dataset with common real-world issues (first 10 rows):**")
+                            st.dataframe(messy_data.head(10), use_container_width=True)
+    
+                            quality_assessor = DataQualityAssessment(messy_data, "Demo Dataset")
+                            quality_report = quality_assessor.generate_quality_report()
+    
+                            col_demo_score, col_demo_issues = st.columns(2)
+    
+                            with col_demo_score:
+                                score = quality_report['overall_score']
+                                score_color_emoji = "🔴"
+                                st.metric("Demo Quality Score", f"{score_color_emoji} {score}/100")
+    
+                            with col_demo_issues:
+                                st.markdown(f"""
+                                **Issues Detected:**
+                                - Consistency Issues: {len(quality_report['consistency'])}
+                                - Validity Issues: {len(quality_report['validity'])}
+                                - Missing Values: {sum(v['missing_count'] for v in quality_report['completeness'].values())}
+                                """)
+    
+                            st.markdown("*This showcases the analytical capabilities to detect various data quality issues.*")
+    
+                            if st.button("Run Cleaning Pipeline on Demo Data", key="run_demo_cleaning_btn"):
+                                with st.spinner("Cleaning demo data..."):
+                                    cleaner = EnterpriseDataCleaner(messy_data)
+                                    cleaned_demo_df = cleaner.standardize_column_names()
+                                    cleaned_demo_df = cleaner.handle_missing_values()
+                                    cleaned_demo_df = cleaner.standardize_categorical_values()
+                                    cleaned_demo_df = cleaner.validate_business_rules()
+                                    cleaned_demo_df = cleaner.remove_outliers()
+    
+                                    cleaning_report_demo = cleaner.generate_cleaning_report()
+    
+                                    st.success("✅ Demo data cleaning completed!")
+    
+                                    st.markdown("**Cleaned Demo Dataset (first 10 rows):**")
+                                    st.dataframe(cleaned_demo_df.head(10), use_container_width=True)
+    
+                                    st.markdown("#### Cleaning Report for Demo Data")
+                                    col_demo_before, col_demo_after = st.columns(2)
+                                    with col_demo_before:
+                                        st.markdown("**Before Cleaning:**")
+                                        st.metric("Rows", f"{cleaning_report_demo['original_shape'][0]:,}")
+                                        st.metric("Columns", cleaning_report_demo['original_shape'][1])
+                                    with col_demo_after:
+                                        st.metric("Rows", f"{cleaning_report_demo['final_shape'][0]:,}", f"{cleaning_report_demo['rows_changed']:+,}")
+                                        st.metric("Columns", cleaning_report_demo['final_shape'][1], f"{cleaning_report_demo['columns_changed']:+,}")
+    
+                                    st.markdown("### 📋 Cleaning Steps Performed on Demo Data")
+                                    for step in cleaning_report_demo['cleaning_steps']:
+                                        st.markdown(f"**{step['step']}**: {step['description']} ({step['changes']} changes)")
+    
+                                    csv_data_demo = cleaned_demo_df.to_csv(index=False).encode('utf-8')
+                                    st.download_button(
+                                        label="📥 Download Cleaned Demo Dataset",
+                                        data=csv_data_demo,
+                                        file_name="cleaned_demo_dataset.csv",
+                                        mime="text/csv",
+                                        key="download_cleaned_demo_data_btn"
+                                    )
+    
+    
+    # === COMPREHENSIVE EXECUTIVE SUMMARY SECTION ===
+    st.markdown("---")
+    st.markdown("## 📋 Executive Summary & Strategic Action Plan")
+    
+    exec_summary_tab1, exec_summary_tab2, exec_summary_tab3 = st.tabs([
+        "🎯 Key Findings", "🚀 Action Plan", "📈 Success Metrics"
+    ])
+    
+    with exec_summary_tab1:
+        col_exec1, col_exec2, col_exec3 = st.columns(3)
+        
+        with col_exec1:
+            st.markdown("### 💰 Revenue Optimization")
+            st.markdown("""
+            **Immediate Opportunities**
+            - **$5.16M annual opportunity** identified through pricing optimization
+            - **23% pricing elasticity improvement** potential across all tiers
+            - **15% conversion gap** vs industry benchmark in trial-to-paid funnel
             
-            with quality_tab4:
-                st.markdown("### 🧹 Automated Data Cleaning Pipeline")
-
-                # The problem was likely in the indentation of the 'else' related to 'if uploaded_file is not None:'
-                # This 'if' and its 'else' should be at the same level as the 'st.markdown("### Automated Data Cleaning Pipeline")'
-                if uploaded_file is not None:
-                    if st.button("Run Data Cleaning Pipeline", type="primary", key="run_cleaning_btn_uploaded"): # Added _uploaded key
-                        with st.spinner("Cleaning data..."):
-                            try:
-                                cleaner = EnterpriseDataCleaner(df_upload)
-
-                                cleaned_df = cleaner.standardize_column_names()
-                                cleaned_df = cleaner.handle_missing_values()
-                                cleaned_df = cleaner.standardize_categorical_values()
-                                cleaned_df = cleaner.validate_business_rules()
-                                cleaned_df = cleaner.remove_outliers()
-
-                                cleaning_report = cleaner.generate_cleaning_report()
-
-                                st.success("✅ Data cleaning completed!")
-
-                                col_before, col_after = st.columns(2)
-
-                                with col_before:
-                                    st.markdown("**Before Cleaning:**")
-                                    st.metric("Rows", f"{cleaning_report['original_shape'][0]:,}")
-                                    st.metric("Columns", cleaning_report['original_shape'][1])
-
-                                with col_after:
-                                    st.markdown("**After Cleaning:**")
-                                    st.metric("Rows", f"{cleaning_report['final_shape'][0]:,}",
-                                              f"{cleaning_report['rows_changed']:+,}")
-                                    st.metric("Columns", cleaning_report['final_shape'][1],
-                                              f"{cleaning_report['columns_changed']:+,}")
-
-                                st.markdown("### 📋 Cleaning Steps Performed")
-                                for step in cleaning_report['cleaning_steps']:
-                                    st.markdown(f"**{step['step']}**: {step['description']} ({step['changes']} changes)")
-
-                                csv_data = cleaned_df.to_csv(index=False).encode('utf-8')
-                                st.download_button(
-                                    label="📥 Download Cleaned Dataset",
-                                    data=csv_data,
-                                    file_name=f"cleaned_{uploaded_file.name.replace('.csv', '').replace('.xlsx', '')}.csv",
-                                    mime="text/csv",
-                                    key="download_cleaned_data_btn_uploaded" # Added _uploaded key
-                                )
-                            except Exception as e:
-                                st.error(f"An error occurred during cleaning: {e}")
-
-                        st.markdown("*This demonstrates the process of programmatically cleaning and validating messy datasets to ensure data reliability for critical business decisions.*")
-
-                else: # This 'else' correctly aligns with 'if uploaded_file is not None:'
-                    st.markdown("### 🎲 Demo: Data Quality Assessment with Messy Data")
-                    st.info("Upload your own dataset above, or click the button below to explore a demo with intentionally messy synthetic data.")
-
-                    if st.button("Generate Messy Demo Dataset", key="generate_messy_demo_btn"):
-                        messy_data = create_messy_demo_dataset()
-
-                        st.markdown("**Generated messy dataset with common real-world issues (first 10 rows):**")
-                        st.dataframe(messy_data.head(10), use_container_width=True)
-
-                        quality_assessor = DataQualityAssessment(messy_data, "Demo Dataset")
-                        quality_report = quality_assessor.generate_quality_report()
-
-                        col_demo_score, col_demo_issues = st.columns(2)
-
-                        with col_demo_score:
-                            score = quality_report['overall_score']
-                            score_color_emoji = "🔴"
-                            st.metric("Demo Quality Score", f"{score_color_emoji} {score}/100")
-
-                        with col_demo_issues:
-                            st.markdown(f"""
-                            **Issues Detected:**
-                            - Consistency Issues: {len(quality_report['consistency'])}
-                            - Validity Issues: {len(quality_report['validity'])}
-                            - Missing Values: {sum(v['missing_count'] for v in quality_report['completeness'].values())}
-                            """)
-
-                        st.markdown("*This showcases the analytical capabilities to detect various data quality issues.*")
-
-                        if st.button("Run Cleaning Pipeline on Demo Data", key="run_demo_cleaning_btn"):
-                            with st.spinner("Cleaning demo data..."):
-                                cleaner = EnterpriseDataCleaner(messy_data)
-                                cleaned_demo_df = cleaner.standardize_column_names()
-                                cleaned_demo_df = cleaner.handle_missing_values()
-                                cleaned_demo_df = cleaner.standardize_categorical_values()
-                                cleaned_demo_df = cleaner.validate_business_rules()
-                                cleaned_demo_df = cleaner.remove_outliers()
-
-                                cleaning_report_demo = cleaner.generate_cleaning_report()
-
-                                st.success("✅ Demo data cleaning completed!")
-
-                                st.markdown("**Cleaned Demo Dataset (first 10 rows):**")
-                                st.dataframe(cleaned_demo_df.head(10), use_container_width=True)
-
-                                st.markdown("#### Cleaning Report for Demo Data")
-                                col_demo_before, col_demo_after = st.columns(2)
-                                with col_demo_before:
-                                    st.markdown("**Before Cleaning:**")
-                                    st.metric("Rows", f"{cleaning_report_demo['original_shape'][0]:,}")
-                                    st.metric("Columns", cleaning_report_demo['original_shape'][1])
-                                with col_demo_after:
-                                    st.metric("Rows", f"{cleaning_report_demo['final_shape'][0]:,}", f"{cleaning_report_demo['rows_changed']:+,}")
-                                    st.metric("Columns", cleaning_report_demo['final_shape'][1], f"{cleaning_report_demo['columns_changed']:+,}")
-
-                                st.markdown("### 📋 Cleaning Steps Performed on Demo Data")
-                                for step in cleaning_report_demo['cleaning_steps']:
-                                    st.markdown(f"**{step['step']}**: {step['description']} ({step['changes']} changes)")
-
-                                csv_data_demo = cleaned_demo_df.to_csv(index=False).encode('utf-8')
-                                st.download_button(
-                                    label="📥 Download Cleaned Demo Dataset",
-                                    data=csv_data_demo,
-                                    file_name="cleaned_demo_dataset.csv",
-                                    mime="text/csv",
-                                    key="download_cleaned_demo_data_btn"
-                                )
-
-
-# === COMPREHENSIVE EXECUTIVE SUMMARY SECTION ===
-st.markdown("---")
-st.markdown("## 📋 Executive Summary & Strategic Action Plan")
-
-exec_summary_tab1, exec_summary_tab2, exec_summary_tab3 = st.tabs([
-    "🎯 Key Findings", "🚀 Action Plan", "📈 Success Metrics"
-])
-
-with exec_summary_tab1:
-    col_exec1, col_exec2, col_exec3 = st.columns(3)
-    
-    with col_exec1:
-        st.markdown("### 💰 Revenue Optimization")
-        st.markdown("""
-        **Immediate Opportunities**
-        - **$5.16M annual opportunity** identified through pricing optimization
-        - **23% pricing elasticity improvement** potential across all tiers
-        - **15% conversion gap** vs industry benchmark in trial-to-paid funnel
+            **Key Insights**
+            - Enterprise segment shows lowest price sensitivity (-0.6 elasticity)
+            - Pro plan has highest optimization potential (+$1.2M ARR)
+            - Geographic pricing disparities create arbitrage opportunities
+            
+            **Risk Mitigation**
+            - A/B testing framework reduces implementation risk to <5%
+            - Gradual rollout strategy protects against customer backlash
+            - Competitive analysis shows 20% pricing headroom in premium segments
+            """)
         
-        **Key Insights**
-        - Enterprise segment shows lowest price sensitivity (-0.6 elasticity)
-        - Pro plan has highest optimization potential (+$1.2M ARR)
-        - Geographic pricing disparities create arbitrage opportunities
+        with col_exec2:
+            st.markdown("### 🎯 Customer Intelligence")
+            st.markdown("""
+            **At-Risk Customer Portfolio**
+            - **347 high-risk customers** requiring immediate intervention
+            - **$156K monthly revenue** at immediate risk of churn
+            - **68% historical retention success** rate with proactive outreach
+            
+            **Growth Opportunities**
+            - **$2.8M LTV uplift potential** from targeted customer optimization
+            - **150 high-usage Basic users** ready for Pro plan upgrade
+            - **25 Enterprise trial extensions** with 60% conversion probability
+            
+            **Predictive Insights**
+            - Usage decline is strongest churn predictor (32%)
+            - Support ticket volume correlation with churn risk (+85%)
+            - Feature adoption score predicts LTV with 76% accuracy
+            """)
         
-        **Risk Mitigation**
-        - A/B testing framework reduces implementation risk to <5%
-        - Gradual rollout strategy protects against customer backlash
-        - Competitive analysis shows 20% pricing headroom in premium segments
-        """)
+        with col_exec3:
+            st.markdown("### 🌍 Market Expansion")
+            st.markdown("""
+            **Global Growth Strategy**
+            - **$15.1M TAM opportunity** across 7 target markets
+            - **Australia & Canada** identified as Tier 1 expansion priorities
+            - **3-year ROI projections** range from 200% to 450%
+            
+            **Regional Performance**
+            - **North America**: Market leader but saturation concerns
+            - **Europe**: Strong retention (2.1% churn) but slow sales cycles
+            - **APAC**: Highest growth (+35% QoQ) with localization needs
+            
+            **Investment Requirements**
+            - **$2.25M total investment** across priority markets
+            - **Break-even timelines** between 5-15 months
+            - **Partner-led approach** reduces initial capital requirements by 40%
+            """)
     
-    with col_exec2:
-        st.markdown("### 🎯 Customer Intelligence")
-        st.markdown("""
-        **At-Risk Customer Portfolio**
-        - **347 high-risk customers** requiring immediate intervention
-        - **$156K monthly revenue** at immediate risk of churn
-        - **68% historical retention success** rate with proactive outreach
+    with exec_summary_tab2:
+        st.markdown("### 🚀 Strategic Action Plan")
         
-        **Growth Opportunities**
-        - **$2.8M LTV uplift potential** from targeted customer optimization
-        - **150 high-usage Basic users** ready for Pro plan upgrade
-        - **25 Enterprise trial extensions** with 60% conversion probability
+        action_plan = pd.DataFrame({
+            "Priority": ["🔥 Critical", "🔥 Critical", "🔥 Critical", "⭐ High", "⭐ High", "⭐ High", "📊 Medium", "📊 Medium"],
+            "Action Item": [
+                "Launch customer success intervention for 347 at-risk accounts",
+                "A/B test Pro plan pricing increase (8% lift target)",
+                "Implement trial-to-paid conversion optimization program",
+                "Accelerate Australia market entry to Q3 2024",
+                "Deploy usage-based upselling campaign for Basic tier power users",
+                "Establish enterprise trial extension program with dedicated CSM",
+                "Develop comprehensive data quality monitoring framework",
+                "Launch annual billing conversion campaign with discount incentives"
+            ],
+            "Expected Impact": [
+                "$1.87M annual churn prevention",
+                "$1.2M incremental ARR",
+                "$720K conversion improvement",
+                "$900K new market revenue",
+                "$780K upgrade revenue",
+                "$1.2M enterprise expansion",
+                "Prevent $500K bad decisions",
+                "$480K billing optimization"
+            ],
+            "Timeline": ["Immediate (7 days)", "30 days", "45 days", "Q3 2024", "60 days", "30 days", "90 days", "60 days"],
+            "Owner": ["Customer Success", "Growth Team", "Product Team", "International", "Sales Team", "Enterprise Sales", "Data Team", "Finance Team"],
+            "Success Criteria": [
+                "68% retention rate achieved",
+                "<5% churn increase observed",
+                "25% trial-to-paid conversion",
+                "$900K ARR within 12 months",
+                "25% Basic→Pro conversion",
+                "60% trial extension conversion",
+                "99.5% data quality score",
+                "35% annual billing adoption"
+            ]
+        })
         
-        **Predictive Insights**
-        - Usage decline is strongest churn predictor (32%)
-        - Support ticket volume correlation with churn risk (+85%)
-        - Feature adoption score predicts LTV with 76% accuracy
-        """)
-    
-    with col_exec3:
-        st.markdown("### 🌍 Market Expansion")
-        st.markdown("""
-        **Global Growth Strategy**
-        - **$15.1M TAM opportunity** across 7 target markets
-        - **Australia & Canada** identified as Tier 1 expansion priorities
-        - **3-year ROI projections** range from 200% to 450%
+        st.dataframe(action_plan, use_container_width=True)
         
-        **Regional Performance**
-        - **North America**: Market leader but saturation concerns
-        - **Europe**: Strong retention (2.1% churn) but slow sales cycles
-        - **APAC**: Highest growth (+35% QoQ) with localization needs
+        st.markdown("### 📅 Implementation Phases")
         
-        **Investment Requirements**
-        - **$2.25M total investment** across priority markets
-        - **Break-even timelines** between 5-15 months
-        - **Partner-led approach** reduces initial capital requirements by 40%
-        """)
-
-with exec_summary_tab2:
-    st.markdown("### 🚀 Strategic Action Plan")
-    
-    action_plan = pd.DataFrame({
-        "Priority": ["🔥 Critical", "🔥 Critical", "🔥 Critical", "⭐ High", "⭐ High", "⭐ High", "📊 Medium", "📊 Medium"],
-        "Action Item": [
-            "Launch customer success intervention for 347 at-risk accounts",
-            "A/B test Pro plan pricing increase (8% lift target)",
-            "Implement trial-to-paid conversion optimization program",
-            "Accelerate Australia market entry to Q3 2024",
-            "Deploy usage-based upselling campaign for Basic tier power users",
-            "Establish enterprise trial extension program with dedicated CSM",
-            "Develop comprehensive data quality monitoring framework",
-            "Launch annual billing conversion campaign with discount incentives"
-        ],
-        "Expected Impact": [
-            "$1.87M annual churn prevention",
-            "$1.2M incremental ARR",
-            "$720K conversion improvement",
-            "$900K new market revenue",
-            "$780K upgrade revenue",
-            "$1.2M enterprise expansion",
-            "Prevent $500K bad decisions",
-            "$480K billing optimization"
-        ],
-        "Timeline": ["Immediate (7 days)", "30 days", "45 days", "Q3 2024", "60 days", "30 days", "90 days", "60 days"],
-        "Owner": ["Customer Success", "Growth Team", "Product Team", "International", "Sales Team", "Enterprise Sales", "Data Team", "Finance Team"],
-        "Success Criteria": [
-            "68% retention rate achieved",
-            "<5% churn increase observed",
-            "25% trial-to-paid conversion",
-            "$900K ARR within 12 months",
-            "25% Basic→Pro conversion",
-            "60% trial extension conversion",
-            "99.5% data quality score",
-            "35% annual billing adoption"
-        ]
-    })
-    
-    st.dataframe(action_plan, use_container_width=True)
-    
-    st.markdown("### 📅 Implementation Phases")
-    
-    phase_col1, phase_col2, phase_col3 = st.columns(3)
-    
-    with phase_col1:
-        st.markdown("""
-        **🚀 Phase 1: Immediate (Next 30 Days)**
-        - Customer churn intervention program
-        - Pro plan pricing A/B test launch
-        - High-value enterprise trial extensions
-        - Basic tier upselling campaign
+        phase_col1, phase_col2, phase_col3 = st.columns(3)
         
-        **Expected Outcomes:**
-        - $1.87M churn prevention
-        - $1.2M ARR from pricing
-        - $780K upgrade revenue
-        """)
-    
-    with phase_col2:
-        st.markdown("""
-        **📈 Phase 2: Growth (60-90 Days)**
-        - Funnel conversion optimization
-        - Australia market entry execution
-        - Annual billing conversion campaign
-        - Data quality infrastructure
+        with phase_col1:
+            st.markdown("""
+            **🚀 Phase 1: Immediate (Next 30 Days)**
+            - Customer churn intervention program
+            - Pro plan pricing A/B test launch
+            - High-value enterprise trial extensions
+            - Basic tier upselling campaign
+            
+            **Expected Outcomes:**
+            - $1.87M churn prevention
+            - $1.2M ARR from pricing
+            - $780K upgrade revenue
+            """)
         
-        **Expected Outcomes:**
-        - $720K conversion improvement
-        - $900K new market revenue
-        - $480K billing optimization
-        """)
-    
-    with phase_col3:
-        st.markdown("""
-        **🌍 Phase 3: Scale (Q4 2024-Q1 2025)**
-        - Additional market expansion (Germany, Canada)
-        - Advanced ML model deployment
-        - Enterprise vertical specialization
-        - Global pricing optimization
+        with phase_col2:
+            st.markdown("""
+            **📈 Phase 2: Growth (60-90 Days)**
+            - Funnel conversion optimization
+            - Australia market entry execution
+            - Annual billing conversion campaign
+            - Data quality infrastructure
+            
+            **Expected Outcomes:**
+            - $720K conversion improvement
+            - $900K new market revenue
+            - $480K billing optimization
+            """)
         
-        **Expected Outcomes:**
-        - $2.5M additional market revenue
-        - 15% overall efficiency improvement
-        - 25% enterprise segment growth
-        """)
-
-with exec_summary_tab3:
-    st.markdown("### 📈 Success Metrics & KPI Tracking")
+        with phase_col3:
+            st.markdown("""
+            **🌍 Phase 3: Scale (Q4 2024-Q1 2025)**
+            - Additional market expansion (Germany, Canada)
+            - Advanced ML model deployment
+            - Enterprise vertical specialization
+            - Global pricing optimization
+            
+            **Expected Outcomes:**
+            - $2.5M additional market revenue
+            - 15% overall efficiency improvement
+            - 25% enterprise segment growth
+            """)
     
-    success_metrics = pd.DataFrame({
-        "Category": ["Revenue", "Revenue", "Revenue", "Customer", "Customer", "Customer", "Operations", "Operations", "Strategic", "Strategic"],
-        "KPI": [
-            "Monthly Recurring Revenue (MRR)",
-            "Annual Recurring Revenue (ARR)",
-            "Average Revenue Per User (ARPU)",
-            "Customer Churn Rate",
-            "Customer Lifetime Value (LTV)",
-            "Net Revenue Retention (NRR)",
-            "Conversion Rate (Trial-to-Paid)",
-            "Customer Acquisition Cost (CAC)",
-            "Market Expansion Revenue",
-            "Geographic Diversification Index"
-        ],
-        "Current": ["$8.2M", "$98.4M", "$89", "3.2%", "$2,400", "108%", "22%", "$280", "$2.1M", "65% NA"],
-        "30-Day Target": ["$8.8M", "$105.6M", "$92", "2.8%", "$2,400", "112%", "23%", "$280", "$2.1M", "65% NA"],
-        "90-Day Target": ["$9.5M", "$114M", "$96", "2.5%", "$2,600", "118%", "25%", "$270", "$2.8M", "60% NA"],
-        "Annual Target": ["$12.1M", "$145.2M", "$105", "2.0%", "$3,200", "125%", "28%", "$250", "$5.5M", "40% NA"]
-    })
-    
-    st.dataframe(success_metrics, use_container_width=True)
+    with exec_summary_tab3:
+        st.markdown("### 📈 Success Metrics & KPI Tracking")
+        
+        success_metrics = pd.DataFrame({
+            "Category": ["Revenue", "Revenue", "Revenue", "Customer", "Customer", "Customer", "Operations", "Operations", "Strategic", "Strategic"],
+            "KPI": [
+                "Monthly Recurring Revenue (MRR)",
+                "Annual Recurring Revenue (ARR)",
+                "Average Revenue Per User (ARPU)",
+                "Customer Churn Rate",
+                "Customer Lifetime Value (LTV)",
+                "Net Revenue Retention (NRR)",
+                "Conversion Rate (Trial-to-Paid)",
+                "Customer Acquisition Cost (CAC)",
+                "Market Expansion Revenue",
+                "Geographic Diversification Index"
+            ],
+            "Current": ["$8.2M", "$98.4M", "$89", "3.2%", "$2,400", "108%", "22%", "$280", "$2.1M", "65% NA"],
+            "30-Day Target": ["$8.8M", "$105.6M", "$92", "2.8%", "$2,400", "112%", "23%", "$280", "$2.1M", "65% NA"],
+            "90-Day Target": ["$9.5M", "$114M", "$96", "2.5%", "$2,600", "118%", "25%", "$270", "$2.8M", "60% NA"],
+            "Annual Target": ["$12.1M", "$145.2M", "$105", "2.0%", "$3,200", "125%", "28%", "$250", "$5.5M", "40% NA"]
+        })
+        
+        st.dataframe(success_metrics, use_container_width=True)
