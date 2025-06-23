@@ -2033,36 +2033,151 @@ with tab_data_quality:
         help="Upload a CSV or Excel file to see real-world data quality assessment in action"
     )
 
-   if uploaded_file is not None:
-    try:
-        if uploaded_file.name.endswith('.csv'):
-            df_upload = pd.read_csv(uploaded_file)
-        else:
-            df_upload = pd.read_excel(uploaded_file)
+    if uploaded_file is not None:
+        try:
+            if uploaded_file.name.endswith('.csv'):
+                df_upload = pd.read_csv(uploaded_file)
+            else:
+                df_upload = pd.read_excel(uploaded_file)
 
-        st.success(f"✅ Successfully loaded {df_upload.shape[0]} rows and {df_upload.shape[1]} columns")
-        st.markdown("### 📊 Data Quality Assessment Report")
+            st.success(f"✅ Successfully loaded {df_upload.shape[0]} rows and {df_upload.shape[1]} columns")
 
-        # Quality assessment logic...
-        # (All your tab logic: quality_tab1, quality_tab2, etc.)
-        # Data cleaning pipeline goes here
+            st.markdown("### 📊 Data Quality Assessment Report")
 
-    except Exception as e:
-        st.error(f"❌ Failed to process uploaded file: {e}")
+            quality_assessor = DataQualityAssessment(df_upload, uploaded_file.name)
+            quality_report = quality_assessor.generate_quality_report()
 
-else:
-    st.markdown("### 🎲 Demo: Data Quality Assessment with Messy Data")
-    st.info("Upload your own dataset above, or click the button below to explore a demo with intentionally messy synthetic data.")
+            col_score, col_summary = st.columns([1, 2])
 
-    if st.button("Generate Messy Demo Dataset", key="generate_messy_demo_btn"):
-        messy_data = create_messy_demo_dataset()
-        st.markdown("**Generated messy dataset with common real-world issues (first 10 rows):**")
-        st.dataframe(messy_data.head(10), use_container_width=True)
+            with col_score:
+                score = quality_report['overall_score']
+                score_color_emoji = "🟢" if score >= 80 else "🟡" if score >= 60 else "🔴"
+                st.metric("Overall Quality Score", f"{score_color_emoji} {score}/100")
 
-        quality_assessor = DataQualityAssessment(messy_data, "Demo Dataset")
-        quality_report = quality_assessor.generate_quality_report()
+            with col_summary:
+                completeness_avg = np.mean([v['completeness_score'] for v in quality_report['completeness'].values()])
+                consistency_issues = len(quality_report['consistency'])
+                validity_issues = len(quality_report['validity'])
 
-        # Continue with demo quality score and cleaning pipeline...
+                st.markdown(f"""
+                **Quality Summary:**
+                - Average Completeness: {completeness_avg:.1f}%
+                - Consistency Issues Detected: {consistency_issues}
+                - Validity Issues Detected: {validity_issues}
+                - Duplicate Records: {quality_report['duplicates']['total_duplicates']}
+                """)
+
+            quality_tab1, quality_tab2, quality_tab3, quality_tab4 = st.tabs([
+                "Completeness", "Consistency Issues", "Validity Issues", "Data Cleaning Pipeline"
+            ])
+
+            with quality_tab1:
+                st.markdown("### 📈 Data Completeness Analysis")
+
+                completeness_df = pd.DataFrame([
+                    {
+                        'Column': col,
+                        'Missing Count': data['missing_count'],
+                        'Missing %': f"{data['missing_percentage']:.1f}%",
+                        'Completeness Score': f"{data['completeness_score']:.1f}%"
+                    }
+                    for col, data in quality_report['completeness'].items()
+                ])
+
+                st.dataframe(completeness_df, use_container_width=True)
+
+                worst_completeness = min(quality_report['completeness'].values(), key=lambda x: x['completeness_score'])
+                worst_column = [k for k, v in quality_report['completeness'].items() if v == worst_completeness][0]
+
+                st.markdown(f"""
+                **💡 Completeness Insights:**
+                - Most incomplete column: **{worst_column}** ({worst_completeness['completeness_score']:.1f}% complete)
+                - Total missing values: **{sum(v['missing_count'] for v in quality_report['completeness'].values()):,}**
+                - Recommended action: {'Investigate data collection process' if worst_completeness['completeness_score'] < 70 else 'Monitor and maintain current quality'}
+                """)
+
+            with quality_tab2:
+                st.markdown("### ⚠️ Consistency Issues")
+
+                if quality_report['consistency']:
+                    consistency_df = pd.DataFrame(quality_report['consistency'])
+                    st.dataframe(consistency_df, use_container_width=True)
+
+                    high_severity = [issue for issue in quality_report['consistency'] if issue['severity'] == 'High']
+                    medium_severity = [issue for issue in quality_report['consistency'] if issue['severity'] == 'Medium']
+
+                    if high_severity:
+                        st.error(f"🚨 **{len(high_severity)} High Severity Issues** - Immediate attention required")
+                    if medium_severity:
+                        st.warning(f"⚠️ **{len(medium_severity)} Medium Severity Issues** - Should be addressed")
+                else:
+                    st.success("✅ No consistency issues detected!")
+
+            with quality_tab3:
+                st.markdown("### 🎯 Validity Issues")
+
+                if quality_report['validity']:
+                    validity_df = pd.DataFrame(quality_report['validity'])
+                    st.dataframe(validity_df, use_container_width=True)
+                else:
+                    st.success("✅ No validity issues detected!")
+
+            with quality_tab4:
+                st.markdown("### 🧹 Automated Data Cleaning Pipeline")
+
+                if st.button("Run Data Cleaning Pipeline", type="primary", key="run_cleaning_btn_uploaded"):
+                    with st.spinner("Cleaning data..."):
+                        try:
+                            cleaner = EnterpriseDataCleaner(df_upload)
+
+                            cleaned_df = cleaner.standardize_column_names()
+                            cleaned_df = cleaner.handle_missing_values()
+                            cleaned_df = cleaner.standardize_categorical_values()
+                            cleaned_df = cleaner.validate_business_rules()
+                            cleaned_df = cleaner.remove_outliers()
+
+                            cleaning_report = cleaner.generate_cleaning_report()
+
+                            st.success("✅ Data cleaning completed!")
+
+                            col_before, col_after = st.columns(2)
+
+                            with col_before:
+                                st.markdown("**Before Cleaning:**")
+                                st.metric("Rows", f"{cleaning_report['original_shape'][0]:,}")
+                                st.metric("Columns", cleaning_report['original_shape'][1])
+
+                            with col_after:
+                                st.markdown("**After Cleaning:**")
+                                st.metric("Rows", f"{cleaning_report['final_shape'][0]:,}",
+                                          f"{cleaning_report['rows_changed']:+,}")
+                                st.metric("Columns", cleaning_report['final_shape'][1],
+                                          f"{cleaning_report['columns_changed']:+,}")
+
+                            st.markdown("### 📋 Cleaning Steps Performed")
+                            for step in cleaning_report['cleaning_steps']:
+                                st.markdown(f"**{step['step']}**: {step['description']} ({step['changes']} changes)")
+
+                            csv_data = cleaned_df.to_csv(index=False).encode('utf-8')
+                            st.download_button(
+                                label="📥 Download Cleaned Dataset",
+                                data=csv_data,
+                                file_name=f"cleaned_{uploaded_file.name.replace('.csv', '').replace('.xlsx', '')}.csv",
+                                mime="text/csv",
+                                key="download_cleaned_data_btn_uploaded"
+                            )
+                        except Exception as e:
+                            st.error(f"An error occurred during cleaning: {e}")
+
+                st.markdown("*This demonstrates the process of programmatically cleaning and validating messy datasets to ensure data reliability for critical business decisions.*")
+
+        except Exception as e:
+            st.error(f"❌ Failed to process uploaded file: {e}")
+
+    else:
+        st.markdown("### 🎲 Demo: Data Quality Assessment with Messy Data")
+        st.info("Upload your own dataset above, or click the button below to explore a demo with intentionally messy synthetic data.")
+
         if st.button("Generate Messy Demo Dataset", key="generate_messy_demo_btn"):
             messy_data = create_messy_demo_dataset()
 
