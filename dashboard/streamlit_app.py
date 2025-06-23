@@ -764,8 +764,8 @@ with tab_funnel:
         
         st.markdown(f"""
         **🚨 Primary Optimization Opportunity: {biggest_gap[0]}**
-        - Current Rate: {biggest_gap[1]['rate']:.1%}
-        - Industry Benchmark: {biggest_gap[1]['industry_benchmark']:.1%}
+        - Current Rate: {biggest_gap[1]['rate']:.1f}%
+        - Industry Benchmark: {biggest_gap[1]['industry_benchmark']:.1f}%
         - Potential Impact: {(biggest_gap[1]['industry_benchmark'] - biggest_gap[1]['rate']) * biggest_gap[1]['volume']:.0f} additional conversions monthly
         """)
         
@@ -1048,7 +1048,7 @@ with tab_pricing:
                 
                 with col_ent:
                     color_ent = "🟢" if enterprise_ratio >= 3 else "🟡" if enterprise_ratio >= 2 else "🔴"
-                    st.metric("Enterprise LTV/CAC", f"{color_ent} {enterprise_ratio:.1f}x", f"LTV: ${enterprise_ltv:.0f}")
+                    st.metric("Enterprise LTV/CAC", f"{color_ent} {enterprise_ratio:.1f}x", f"LTV: ${enterprise_ltv:.0ff}")
         
         with st.expander("💡 LTV/CAC Insights & Recommendations"):
             if not ltv_cac_data.empty and np.isfinite(ltv_cac_data['LTV/CAC Ratio']).any():
@@ -1460,9 +1460,9 @@ with tab_ab_testing:
 
             st.markdown(f"""
             **💼 Business Impact**
-            - **Conversion Lift**: {lift_value:+.1f} percentage points
-            - **Revenue Impact**: ${lift_value * 1000:+,.0f} monthly (estimated)
-            - **Confidence Interval**: [{ci_lower}, {ci_upper}]
+            - **Conversion Lift**: {lift_value:+.1f} percentage points  
+            - **Revenue Impact**: ${lift_value * 1000:+,.0f} monthly (estimated)  
+            - **Confidence Interval**: [{ci_lower}, {ci_upper}]  
             - **Implementation Risk**: {risk_level}
             """)
         
@@ -2126,11 +2126,10 @@ with tab_ml_insights:
                     else:
                         st.success("✅ No validity issues detected!")
 
-                with quality_tab4: # Corrected indentation for this block
+                with quality_tab4: # This block's indentation starts here
                     st.markdown("### 🧹 Automated Data Cleaning Pipeline")
 
-                    # Check if a file has been uploaded before displaying the "Run Data Cleaning Pipeline" button
-                    if uploaded_file is not None:
+                    if uploaded_file is not None: # This check needs to be at the correct level
                         if st.button("Run Data Cleaning Pipeline", type="primary", key="run_cleaning_btn"):
                             with st.spinner("Cleaning data..."):
                                 try:
@@ -2177,7 +2176,7 @@ with tab_ml_insights:
 
                         st.markdown("*This demonstrates the process of programmatically cleaning and validating messy datasets to ensure data reliability for critical business decisions.*")
 
-                    else: # This else block should be at the same indentation level as 'if uploaded_file is not None:'
+                    else: # This else aligns with 'if uploaded_file is not None:'
                         st.markdown("### 🎲 Demo: Data Quality Assessment with Messy Data")
                         st.info("Upload your own dataset above, or click the button below to explore a demo with intentionally messy synthetic data.")
 
@@ -2247,182 +2246,182 @@ with tab_ml_insights:
                                     )
 
 
-    # === EXECUTIVE SUMMARY SECTION ===
-    st.markdown("---")
-    st.markdown("## 📋 Executive Summary & Strategic Action Plan")
+# === COMPREHENSIVE EXECUTIVE SUMMARY SECTION ===
+st.markdown("---")
+st.markdown("## 📋 Executive Summary & Strategic Action Plan")
 
-    exec_summary_tab1, exec_summary_tab2, exec_summary_tab3 = st.tabs([
-        "🎯 Key Findings", "🚀 Action Plan", "📈 Success Metrics"
-    ])
+exec_summary_tab1, exec_summary_tab2, exec_summary_tab3 = st.tabs([
+    "🎯 Key Findings", "🚀 Action Plan", "📈 Success Metrics"
+])
 
-    with exec_summary_tab1:
-        col_exec1, col_exec2, col_exec3 = st.columns(3)
+with exec_summary_tab1:
+    col_exec1, col_exec2, col_exec3 = st.columns(3)
+    
+    with col_exec1:
+        st.markdown("### 💰 Revenue Optimization")
+        st.markdown("""
+        **Immediate Opportunities**
+        - **$5.16M annual opportunity** identified through pricing optimization
+        - **23% pricing elasticity improvement** potential across all tiers
+        - **15% conversion gap** vs industry benchmark in trial-to-paid funnel
+        
+        **Key Insights**
+        - Enterprise segment shows lowest price sensitivity (-0.6 elasticity)
+        - Pro plan has highest optimization potential (+$1.2M ARR)
+        - Geographic pricing disparities create arbitrage opportunities
+        
+        **Risk Mitigation**
+        - A/B testing framework reduces implementation risk to <5%
+        - Gradual rollout strategy protects against customer backlash
+        - Competitive analysis shows 20% pricing headroom in premium segments
+        """)
+    
+    with col_exec2:
+        st.markdown("### 🎯 Customer Intelligence")
+        st.markdown("""
+        **At-Risk Customer Portfolio**
+        - **347 high-risk customers** requiring immediate intervention
+        - **$156K monthly revenue** at immediate risk of churn
+        - **68% historical retention success** rate with proactive outreach
+        
+        **Growth Opportunities**
+        - **$2.8M LTV uplift potential** from targeted customer optimization
+        - **150 high-usage Basic users** ready for Pro plan upgrade
+        - **25 Enterprise trial extensions** with 60% conversion probability
+        
+        **Predictive Insights**
+        - Usage decline is strongest churn predictor (32%)
+        - Support ticket volume correlation with churn risk (+85%)
+        - Feature adoption score predicts LTV with 76% accuracy
+        """)
+    
+    with col_exec3:
+        st.markdown("### 🌍 Market Expansion")
+        st.markdown("""
+        **Global Growth Strategy**
+        - **$15.1M TAM opportunity** across 7 target markets
+        - **Australia & Canada** identified as Tier 1 expansion priorities
+        - **3-year ROI projections** range from 200% to 450%
+        
+        **Regional Performance**
+        - **North America**: Market leader but saturation concerns
+        - **Europe**: Strong retention (2.1% churn) but slow sales cycles
+        - **APAC**: Highest growth (+35% QoQ) with localization needs
+        
+        **Investment Requirements**
+        - **$2.25M total investment** across priority markets
+        - **Break-even timelines** between 5-15 months
+        - **Partner-led approach** reduces initial capital requirements by 40%
+        """)
 
-        with col_exec1:
-            st.markdown("### 💰 Revenue Optimization")
-            st.markdown("""
-            **Immediate Opportunities**
-            - **$5.16M annual opportunity** identified through pricing optimization
-            - **23% pricing elasticity improvement** potential across all tiers
-            - **15% conversion gap** vs industry benchmark in trial-to-paid funnel
+with exec_summary_tab2:
+    st.markdown("### 🚀 Strategic Action Plan")
+    
+    action_plan = pd.DataFrame({
+        "Priority": ["🔥 Critical", "🔥 Critical", "🔥 Critical", "⭐ High", "⭐ High", "⭐ High", "📊 Medium", "📊 Medium"],
+        "Action Item": [
+            "Launch customer success intervention for 347 at-risk accounts",
+            "A/B test Pro plan pricing increase (8% lift target)",
+            "Implement trial-to-paid conversion optimization program",
+            "Accelerate Australia market entry to Q3 2024",
+            "Deploy usage-based upselling campaign for Basic tier power users",
+            "Establish enterprise trial extension program with dedicated CSM",
+            "Develop comprehensive data quality monitoring framework",
+            "Launch annual billing conversion campaign with discount incentives"
+        ],
+        "Expected Impact": [
+            "$1.87M annual churn prevention",
+            "$1.2M incremental ARR",
+            "$720K conversion improvement",
+            "$900K new market revenue",
+            "$780K upgrade revenue",
+            "$1.2M enterprise expansion",
+            "Prevent $500K bad decisions",
+            "$480K billing optimization"
+        ],
+        "Timeline": ["Immediate (7 days)", "30 days", "45 days", "Q3 2024", "60 days", "30 days", "90 days", "60 days"],
+        "Owner": ["Customer Success", "Growth Team", "Product Team", "International", "Sales Team", "Enterprise Sales", "Data Team", "Finance Team"],
+        "Success Criteria": [
+            "68% retention rate achieved",
+            "<5% churn increase observed",
+            "25% trial-to-paid conversion",
+            "$900K ARR within 12 months",
+            "25% Basic→Pro conversion",
+            "60% trial extension conversion",
+            "99.5% data quality score",
+            "35% annual billing adoption"
+        ]
+    })
+    
+    st.dataframe(action_plan, use_container_width=True)
+    
+    st.markdown("### 📅 Implementation Phases")
+    
+    phase_col1, phase_col2, phase_col3 = st.columns(3)
+    
+    with phase_col1:
+        st.markdown("""
+        **🚀 Phase 1: Immediate (Next 30 Days)**
+        - Customer churn intervention program
+        - Pro plan pricing A/B test launch
+        - High-value enterprise trial extensions
+        - Basic tier upselling campaign
+        
+        **Expected Outcomes:**
+        - $1.87M churn prevention
+        - $1.2M ARR from pricing
+        - $780K upgrade revenue
+        """)
+    
+    with phase_col2:
+        st.markdown("""
+        **📈 Phase 2: Growth (60-90 Days)**
+        - Funnel conversion optimization
+        - Australia market entry execution
+        - Annual billing conversion campaign
+        - Data quality infrastructure
+        
+        **Expected Outcomes:**
+        - $720K conversion improvement
+        - $900K new market revenue
+        - $480K billing optimization
+        """)
+    
+    with phase_col3:
+        st.markdown("""
+        **🌍 Phase 3: Scale (Q4 2024-Q1 2025)**
+        - Additional market expansion (Germany, Canada)
+        - Advanced ML model deployment
+        - Enterprise vertical specialization
+        - Global pricing optimization
+        
+        **Expected Outcomes:**
+        - $2.5M additional market revenue
+        - 15% overall efficiency improvement
+        - 25% enterprise segment growth
+        """)
 
-            **Key Insights**
-            - Enterprise segment shows lowest price sensitivity (-0.6 elasticity)
-            - Pro plan has highest optimization potential (+$1.2M ARR)
-            - Geographic pricing disparities create arbitrage opportunities
-
-            **Risk Mitigation**
-            - A/B testing framework reduces implementation risk to <5%
-            - Gradual rollout strategy protects against customer backlash
-            - Competitive analysis shows 20% pricing headroom in premium segments
-            """)
-
-        with col_exec2:
-            st.markdown("### 🎯 Customer Intelligence")
-            st.markdown("""
-            **At-Risk Customer Portfolio**
-            - **347 high-risk customers** requiring immediate intervention
-            - **$156K monthly revenue** at immediate risk of churn
-            - **68% historical retention success** rate with proactive outreach
-
-            **Growth Opportunities**
-            - **$2.8M LTV uplift potential** from targeted customer optimization
-            - **150 high-usage Basic users** ready for Pro plan upgrade
-            - **25 Enterprise trial extensions** with 60% conversion probability
-
-            **Predictive Insights**
-            - Usage decline is strongest churn predictor (32%)
-            - Support ticket volume correlation with churn risk (+85%)
-            - Feature adoption score predicts LTV with 76% accuracy
-            """)
-
-        with col_exec3:
-            st.markdown("### 🌍 Market Expansion")
-            st.markdown("""
-            **Global Growth Strategy**
-            - **$15.1M TAM opportunity** across 7 target markets
-            - **Australia & Canada** identified as Tier 1 expansion priorities
-            - **3-year ROI projections** range from 200% to 450%
-
-            **Regional Performance**
-            - **North America**: Market leader but saturation concerns
-            - **Europe**: Strong retention (2.1% churn) but slow sales cycles
-            - **APAC**: Highest growth (+35% QoQ) with localization needs
-
-            **Investment Requirements**
-            - **$2.25M total investment** across priority markets
-            - **Break-even timelines** between 5-15 months
-            - **Partner-led approach** reduces initial capital requirements by 40%
-            """)
-
-    with exec_summary_tab2:
-        st.markdown("### 🚀 Strategic Action Plan")
-
-        action_plan = pd.DataFrame({
-            "Priority": ["🔥 Critical", "🔥 Critical", "🔥 Critical", "⭐ High", "⭐ High", "⭐ High", "📊 Medium", "📊 Medium"],
-            "Action Item": [
-                "Launch customer success intervention for 347 at-risk accounts",
-                "A/B test Pro plan pricing increase (8% lift target)",
-                "Implement trial-to-paid conversion optimization program",
-                "Accelerate Australia market entry to Q3 2024",
-                "Deploy usage-based upselling campaign for Basic tier power users",
-                "Establish enterprise trial extension program with dedicated CSM",
-                "Develop comprehensive data quality monitoring framework",
-                "Launch annual billing conversion campaign with discount incentives"
-            ],
-            "Expected Impact": [
-                "$1.87M annual churn prevention",
-                "$1.2M incremental ARR",
-                "$720K conversion improvement",
-                "$900K new market revenue",
-                "$780K upgrade revenue",
-                "$1.2M enterprise expansion",
-                "Prevent $500K bad decisions",
-                "$480K billing optimization"
-            ],
-            "Timeline": ["Immediate (7 days)", "30 days", "45 days", "Q3 2024", "60 days", "30 days", "90 days", "60 days"],
-            "Owner": ["Customer Success", "Growth Team", "Product Team", "International", "Sales Team", "Enterprise Sales", "Data Team", "Finance Team"],
-            "Success Criteria": [
-                "68% retention rate achieved",
-                "<5% churn increase observed",
-                "25% trial-to-paid conversion",
-                "$900K ARR within 12 months",
-                "25% Basic→Pro conversion",
-                "60% trial extension conversion",
-                "99.5% data quality score",
-                "35% annual billing adoption"
-            ]
-        })
-
-        st.dataframe(action_plan, use_container_width=True)
-
-        st.markdown("### 📅 Implementation Phases")
-
-        phase_col1, phase_col2, phase_col3 = st.columns(3)
-
-        with phase_col1:
-            st.markdown("""
-            **🚀 Phase 1: Immediate (Next 30 Days)**
-            - Customer churn intervention program
-            - Pro plan pricing A/B test launch
-            - High-value enterprise trial extensions
-            - Basic tier upselling campaign
-
-            **Expected Outcomes:**
-            - $1.87M churn prevention
-            - $1.2M ARR from pricing
-            - $780K upgrade revenue
-            """)
-
-        with phase_col2:
-            st.markdown("""
-            **📈 Phase 2: Growth (60-90 Days)**
-            - Funnel conversion optimization
-            - Australia market entry execution
-            - Annual billing conversion campaign
-            - Data quality infrastructure
-
-            **Expected Outcomes:**
-            - $720K conversion improvement
-            - $900K new market revenue
-            - $480K billing optimization
-            """)
-
-        with phase_col3:
-            st.markdown("""
-            **🌍 Phase 3: Scale (Q4 2024-Q1 2025)**
-            - Additional market expansion (Germany, Canada)
-            - Advanced ML model deployment
-            - Enterprise vertical specialization
-            - Global pricing optimization
-
-            **Expected Outcomes:**
-            - $2.5M additional market revenue
-            - 15% overall efficiency improvement
-            - 25% enterprise segment growth
-            """)
-
-    with exec_summary_tab3:
-        st.markdown("### 📈 Success Metrics & KPI Tracking")
-
-        success_metrics = pd.DataFrame({
-            "Category": ["Revenue", "Revenue", "Revenue", "Customer", "Customer", "Customer", "Operations", "Operations", "Strategic", "Strategic"],
-            "KPI": [
-                "Monthly Recurring Revenue (MRR)",
-                "Annual Recurring Revenue (ARR)",
-                "Average Revenue Per User (ARPU)",
-                "Customer Churn Rate",
-                "Customer Lifetime Value (LTV)",
-                "Net Revenue Retention (NRR)",
-                "Conversion Rate (Trial-to-Paid)",
-                "Customer Acquisition Cost (CAC)",
-                "Market Expansion Revenue",
-                "Geographic Diversification Index"
-            ],
-            "Current": ["$8.2M", "$98.4M", "$89", "3.2%", "$2,400", "108%", "22%", "$280", "$2.1M", "65% NA"],
-            "30-Day Target": ["$8.8M", "$105.6M", "$92", "2.8%", "$2,400", "112%", "23%", "$280", "$2.1M", "65% NA"],
-            "90-Day Target": ["$9.5M", "$114M", "$96", "2.5%", "$2,600", "118%", "25%", "$270", "$2.8M", "60% NA"],
-            "Annual Target": ["$12.1M", "$145.2M", "$105", "2.0%", "$3,200", "125%", "28%", "$250", "$5.5M", "40% NA"]
-        })
-
-        st.dataframe(success_metrics, use_container_width=True)
+with exec_summary_tab3:
+    st.markdown("### 📈 Success Metrics & KPI Tracking")
+    
+    success_metrics = pd.DataFrame({
+        "Category": ["Revenue", "Revenue", "Revenue", "Customer", "Customer", "Customer", "Operations", "Operations", "Strategic", "Strategic"],
+        "KPI": [
+            "Monthly Recurring Revenue (MRR)",
+            "Annual Recurring Revenue (ARR)",
+            "Average Revenue Per User (ARPU)",
+            "Customer Churn Rate",
+            "Customer Lifetime Value (LTV)",
+            "Net Revenue Retention (NRR)",
+            "Conversion Rate (Trial-to-Paid)",
+            "Customer Acquisition Cost (CAC)",
+            "Market Expansion Revenue",
+            "Geographic Diversification Index"
+        ],
+        "Current": ["$8.2M", "$98.4M", "$89", "3.2%", "$2,400", "108%", "22%", "$280", "$2.1M", "65% NA"],
+        "30-Day Target": ["$8.8M", "$105.6M", "$92", "2.8%", "$2,400", "112%", "23%", "$280", "$2.1M", "65% NA"],
+        "90-Day Target": ["$9.5M", "$114M", "$96", "2.5%", "$2,600", "118%", "25%", "$270", "$2.8M", "60% NA"],
+        "Annual Target": ["$12.1M", "$145.2M", "$105", "2.0%", "$3,200", "125%", "28%", "$250", "$5.5M", "40% NA"]
+    })
+    
+    st.dataframe(success_metrics, use_container_width=True)
