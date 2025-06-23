@@ -1276,7 +1276,19 @@ with tab_executive_summary:
         st.markdown(filter_summary)
 
     st.markdown("---")
-    st.markdown("*This dashboard provides actionable insights to drive significant revenue optimization through data-driven strategies. All metrics and recommendations update dynamically based on your selected filters.*")ly_chart(fig_mrr, use_container_width=True)
+    st.markdown("*This dashboard provides actionable insights to drive significant revenue optimization through data-driven strategies. All metrics and recommendations update dynamically based on your selected filters.*")
+
+    st.markdown("#### Monthly Recurring Revenue & Churn Rate (Simulated Data)")
+    with st.container(border=True):
+        col_mrr, col_churn = st.columns(2)
+        overview_data = pd.DataFrame({
+            "Month": pd.date_range("2024-01-01", periods=6, freq="M"),
+            "MRR": [10000, 12000, 14000, 16000, 18000, 20000],
+            "Churn Rate": [0.05, 0.04, 0.045, 0.035, 0.03, 0.025]
+        })
+        with col_mrr:
+            fig_mrr = px.bar(overview_data, x="Month", y="MRR", title="Monthly Recurring Revenue")
+            st.plotly_chart(fig_mrr, use_container_width=True)
         with col_churn:
             fig_churn = px.line(overview_data, x="Month", y="Churn Rate", title="Churn Rate Over Time")
             st.plotly_chart(fig_churn, use_container_width=True)
