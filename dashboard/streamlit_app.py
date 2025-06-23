@@ -251,7 +251,7 @@ def create_messy_demo_dataset():
 
 st.set_page_config(
     layout="wide",
-    page_title="Monetization Dashboard",
+    page_title="Telemetry Monetization Dashboard", # Changed page_title
     page_icon="💰"
 )
 
@@ -275,7 +275,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("Simplified Telemetry Monetization Dashboard")
+st.title("Telemetry Monetization Dashboard") # Changed st.title
 st.markdown("This dashboard provides a concise overview of key monetization metrics and data quality insights.")
 st.markdown("---")
 
@@ -455,21 +455,29 @@ with tab_funnel:
     with st.container(border=True):
         col_f1, col_f2, col_f3, col_f4 = st.columns(4)
         with col_f1:
-            plan_options = ["All"] + (funnel_df_main['plan'].unique().tolist() if 'plan' in funnel_df_main.columns else [])
+            # Ensure plan_options are drawn from the full funnel_df_main
+            plan_options = ["All"] + sorted(funnel_df_main['plan'].dropna().unique().tolist()) if 'plan' in funnel_df_main.columns and not funnel_df_main['plan'].empty else ["All"]
             funnel_plan = st.selectbox("Plan", plan_options, key="funnel_plan")
         with col_f2:
-            region_options = ["All"] + (funnel_df_main['region'].unique().tolist() if 'region' in funnel_df_main.columns else [])
+            # Ensure region_options are drawn from the full funnel_df_main
+            region_options = ["All"] + sorted(funnel_df_main['region'].dropna().unique().tolist()) if 'region' in funnel_df_main.columns and not funnel_df_main['region'].empty else ["All"]
             funnel_region = st.selectbox("Region", region_options, key="funnel_region")
         with col_f3:
-            segment_options_funnel = ["All"] + (funnel_df_main['customer_segment'].unique().tolist() if 'customer_segment' in funnel_df_main.columns else [])
+            # Ensure segment_options_funnel are drawn from the full funnel_df_main
+            segment_options_funnel = ["All"] + sorted(funnel_df_main['customer_segment'].dropna().unique().tolist()) if 'customer_segment' in funnel_df_main.columns and not funnel_df_main['customer_segment'].empty else ["All"]
             funnel_segment = st.selectbox("Customer Segment", segment_options_funnel, key="funnel_segment")
         with col_f4: # Year slider moved to after dropdowns
-            min_year = int(funnel_df_main['year'].min()) if 'year' in funnel_df_main.columns and not funnel_df_main['year'].empty else 2021
-            max_year = int(funnel_df_main['year'].max()) if 'year' in funnel_df_main.columns and not funnel_df_main['year'].empty else 2024
+            # Ensure year min/max are valid from funnel_df_main, default if empty
+            if 'year' in funnel_df_main.columns and not funnel_df_main['year'].empty:
+                min_year = int(funnel_df_main['year'].min())
+                max_year = int(funnel_df_main['year'].max())
+            else:
+                min_year = 2021
+                max_year = 2024
             funnel_year = st.slider("Year", min_year, max_year, max_year, key="funnel_year")
 
     funnel_df_filtered = funnel_df_main.copy()
-    # Ensure columns exist before filtering to prevent errors
+    # Ensure columns exist and the selected value is not "All" before filtering
     if 'plan' in funnel_df_filtered.columns and funnel_plan != "All":
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["plan"] == funnel_plan]
     if 'region' in funnel_df_filtered.columns and funnel_region != "All":
@@ -534,7 +542,6 @@ with tab_pricing:
     st.markdown("Comprehensive financial modeling including revenue forecasting and LTV/CAC analysis.")
 
     # Calculate projected MRR and profits to display KPIs first
-    # This logic is duplicated from below but necessary to make KPIs available at the top
     # Default values for initial KPI display
     current_mrr_calc = 125000
     growth_rate_calc = 5.2
@@ -549,8 +556,8 @@ with tab_pricing:
         current_calc = current_calc * (1 + net_growth_calc)
         projected_mrr_calc.append(current_calc)
     
-    projected_cogs_calc = [mrr * (cogs_percent_calc/100) for mrr in projected_mrr_calc]
-    projected_gross_profit_calc = [mrr - cogs for mrr, cogs in zip(projected_mrr_calc, projected_cogs_calc)]
+    projected_cogs = [mrr * (cogs_percent_calc/100) for mrr in projected_mrr_calc]
+    projected_gross_profit = [mrr - cogs for mrr, cogs in zip(projected_mrr_calc, projected_cogs)]
 
     st.markdown("#### Key Financial Metrics (Month 12 Projected)")
     with st.container(border=True):
@@ -559,13 +566,14 @@ with tab_pricing:
         if projected_mrr_calc:
             final_mrr_calc = projected_mrr_calc[-1]
             final_arr_calc = final_mrr_calc * 12
-            gross_margin_calc = (projected_gross_profit_calc[-1] / final_mrr_calc * 100) if final_mrr_calc != 0 else 0
-            simulated_net_margin_percent_calc = gross_margin_calc * 0.5 # Example: 50% of gross profit becomes net profit
+            gross_margin = (projected_gross_profit[-1] / final_mrr_calc * 100) if final_mrr_calc != 0 else 0
+            simulated_net_margin_percent_calc = gross_margin * 0.5 # Example: 50% of gross profit becomes net profit
             
-            col_fin1.markdown(f"<div class='metric-card'>**Projected ARR**<br><span style='font-size:1.5em;'>${final_arr_calc:,.0f}</span></div>", unsafe_allow_html=True)
-            col_fin2.markdown(f"<div class='metric-card'>**Monthly Revenue**<br><span style='font-size:1.5em;'>${final_mrr_calc:,.0f}</span></div>", unsafe_allow_html=True)
-            col_fin3.markdown(f"<div class='metric-card'>**Gross Margin**<br><span style='font-size:1.5em;'>{gross_margin_calc:.1f}%</span></div>", unsafe_allow_html=True)
-            col_fin4.markdown(f"<div class='metric-card'>**Est. Net Margin**<br><span style='font-size:1.5em;'>{simulated_net_margin_percent_calc:.1f}%</span></div>", unsafe_allow_html=True)
+            # Removed ** bolding as requested
+            col_fin1.markdown(f"<div class='metric-card'>Projected ARR<br><span style='font-size:1.5em;'>${final_arr_calc:,.0f}</span></div>", unsafe_allow_html=True)
+            col_fin2.markdown(f"<div class='metric-card'>Monthly Revenue<br><span style='font-size:1.5em;'>${final_mrr_calc:,.0f}</span></div>", unsafe_allow_html=True)
+            col_fin3.markdown(f"<div class='metric-card'>Gross Margin<br><span style='font-size:1.5em;'>{gross_margin:.1f}%</span></div>", unsafe_allow_html=True)
+            col_fin4.markdown(f"<div class='metric-card'>Est. Net Margin<br><span style='font-size:1.5em;'>{simulated_net_margin_percent_calc:.1f}%</span></div>", unsafe_allow_html=True)
         else:
             st.info("No projections available. Adjust parameters in the 'Revenue Forecasting' section below.")
 
