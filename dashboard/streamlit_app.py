@@ -548,7 +548,6 @@ with tab_overview:
 
 
 # --- Tab: Funnel Analysis ---
-# --- Tab: Funnel Analysis ---
 with tab_funnel:
     st.header("🔄 Funnel Analysis")
     st.markdown("Analyze user journey drop-offs and conversion rates at each stage.")
@@ -557,7 +556,7 @@ with tab_funnel:
     with st.container(border=True):
         col_f1, col_f2, col_f3, col_f4 = st.columns(4)
 
-        # ✅ Get options from full dataset (not globally filtered) to avoid empty dropdowns
+        # ✅ Always get options from raw funnel_df_main (NOT globally filtered)
         with col_f1:
             plan_options = ["All"] + sorted(funnel_df_main['plan'].dropna().unique().tolist()) if 'plan' in funnel_df_main.columns else ["All"]
             funnel_plan = st.selectbox("Plan", plan_options, key="funnel_plan")
