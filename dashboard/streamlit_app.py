@@ -1459,108 +1459,81 @@ with tab_ab_testing:
             - **Power**: {'Adequate' if abs(lift_value) > 2 else 'Insufficient'}
             """)
         
-        with col_stats2:
-            st.markdown(f"""
-            **💼 Business Impact**
-            - **Conversion Lift**: {lift_value:+.1f} percentage points
-            - **Revenue Impact**: ${lift_value * 1000:+,.0f} monthly (estimated)
-            - **Confidence Interval**: [{variant_rate-2:.1f}}%, {variant_rate+2:.1f}}%]
-            - **Implementation Risk**: {'Low' if lift_value > 2 else 'Medium' if lift_value > 0 else 'High'}
-            """)
-        
-        st.markdown("### 🎯 Decision Framework & Next Steps")
-        
-        if lift_value > 2.0:
-            recommendation = "🚀 **IMPLEMENT**: Strong positive result with statistical confidence"
-            next_steps = [
-                "Deploy variant to 100% of traffic",
-                "Monitor key metrics for 2 weeks post-rollout",
-                "Document learnings for future experiments",
-                "Scale successful elements to other pages/flows"
-            ]
-            recommendation_color = "success"
-        elif lift_value > 0.5:
-            recommendation = "🤔 **CONTINUE TESTING**: Promising trend, needs more data"
-            next_steps = [
-                "Extend test duration by 2 weeks",
-                "Increase sample size allocation",
-                "Consider secondary metrics analysis",
-                "Prepare contingency for inconclusive results"
-            ]
-            recommendation_color = "warning"
-        elif lift_value > -1.0:
-            recommendation = "⚖️ **NEUTRAL**: No significant impact detected"
-            next_steps = [
-                "Stop current test (no clear winner)",
-                "Analyze user segments for differential effects",
-                "Design follow-up test with refined hypothesis",
-                "Consider testing more dramatic variations"
-            ]
-            recommendation_color = "info"
-        else:
-            recommendation = "🛑 **REJECT VARIANT**: Negative impact detected"
-            next_steps = [
-                "Immediately stop test and revert to control",
-                "Conduct user research to understand failure",
-                "Analyze which user segments were most affected",
-                "Redesign approach based on learnings"
-            ]
-            recommendation_color = "error"
-        
-        if recommendation_color == "success":
-            st.success(recommendation)
-        elif recommendation_color == "warning":
-            st.warning(recommendation)
-        elif recommendation_color == "info":
-            st.info(recommendation)
-        else:
-            st.error(recommendation)
-        
-        st.markdown("**Immediate Next Steps:**")
-        for i, step in enumerate(next_steps, 1):
-            st.markdown(f"{i}. {step}")
-        
-        st.markdown("### 📈 A/B Testing Program Performance")
-        test_history = pd.DataFrame({
-            "Test Name": ["Homepage CTA v2", "Pricing Page Layout", "Signup Flow Simplification", "Feature Showcase", "Current Test"],
-            "Test Period": ["2024-Q1", "2024-Q1", "2024-Q2", "2024-Q2", "2024-Q3"],
-            "Result": ["✅ +15% conversion", "⚠️ No significant change", "✅ +8% signups", "❌ -3% engagement", f"{'✅' if lift_value > 2 else '⚠️' if lift_value > 0 else '❌'} {lift_value:+.1f}% lift"],
-            "Implementation": ["Deployed", "Archived", "Deployed", "Reverted", "In Progress"],
-            "Business Impact": ["+$45K monthly", "$0", "+$28K monthly", "-$12K monthly", f"${lift_value * 1000:+,.0f} monthly"]
-        })
-        
-        st.dataframe(test_history, use_container_width=True)
-        
-        successful_tests = len([r for r in test_history["Result"] if "✅" in r])
-        total_tests = len(test_history) - 1
-        success_rate = (successful_tests / total_tests) * 100 if total_tests > 0 else 0
-        
-        total_revenue_impact = 45000 + 28000 + (lift_value * 1000 if lift_value > 0 else 0)
-        
-        st.markdown(f"""
-        **🏆 A/B Testing Program Insights:**
-        - **Success Rate**: {success_rate:.0f}% of tests show positive, significant results
-        - **Average Lift**: +11.5% conversion improvement for successful tests
-        - **Total Program ROI**: ${total_revenue_impact:,.0f} monthly revenue increase
-        - **Learning Velocity**: 1.5 tests per month, increasing experimental maturity
-        - **Cost Savings**: Prevented ${12000:,.0f} monthly revenue loss by catching negative impacts
-        """)
-        
-        st.markdown("### 🗓️ Upcoming Test Pipeline")
-        testing_roadmap = pd.DataFrame({
-            "Test Name": ["Mobile Checkout Flow", "Enterprise Demo Booking", "Free Trial Length", "Pricing Page Redesign"],
-            "Hypothesis": [
-                "Streamlined mobile flow will increase conversion by 15%",
-                "Calendar integration will increase demo bookings by 25%",
-                "14-day trial will outperform 7-day by 20%",
-                "Value-focused messaging will reduce price sensitivity"
-            ],
-            "Target Metric": ["Mobile conversion rate", "Demo booking rate", "Trial-to-paid rate", "Enterprise signup rate"],
-            "Planned Start": ["Next week", "2 weeks", "1 month", "6 weeks"],
-            "Expected Duration": ["3 weeks", "4 weeks", "6 weeks", "4 weeks"]
-        })
-        
-        st.dataframe(testing_roadmap, use_container_width=True)
+# Pre-format confidence interval values
+ci_lower = f"{variant_rate - 2:.1f}%"
+ci_upper = f"{variant_rate + 2:.1f}%"
+
+# Determine implementation risk level with emoji
+if lift_value > 2:
+    risk_level = "🟢 Low"
+elif lift_value > 0:
+    risk_level = "🟡 Medium"
+else:
+    risk_level = "🔴 High"
+
+with col_stats2:
+    st.markdown(f"""
+    **💼 Business Impact**
+    - **Conversion Lift**: {lift_value:+.1f} percentage points  
+    - **Revenue Impact**: ${lift_value * 1000:+,.0f} monthly (estimated)  
+    - **Confidence Interval**: [{ci_lower}, {ci_upper}]  
+    - **Implementation Risk**: {risk_level}
+    """)
+
+st.markdown("### 🎯 Decision Framework & Next Steps")
+
+if lift_value > 2.0:
+    recommendation = "🚀 **IMPLEMENT**: Strong positive result with statistical confidence"
+    next_steps = [
+        "Deploy variant to 100% of traffic",
+        "Monitor key metrics for 2 weeks post-rollout",
+        "Document learnings for future experiments",
+        "Scale successful elements to other pages/flows"
+    ]
+    recommendation_color = "success"
+elif lift_value > 0.5:
+    recommendation = "🤔 **CONTINUE TESTING**: Promising trend, needs more data"
+    next_steps = [
+        "Extend test duration by 2 weeks",
+        "Increase sample size allocation",
+        "Consider secondary metrics analysis",
+        "Prepare contingency for inconclusive results"
+    ]
+    recommendation_color = "warning"
+elif lift_value > -1.0:
+    recommendation = "⚖️ **NEUTRAL**: No significant impact detected"
+    next_steps = [
+        "Stop current test (no clear winner)",
+        "Analyze user segments for differential effects",
+        "Design follow-up test with refined hypothesis",
+        "Consider testing more dramatic variations"
+    ]
+    recommendation_color = "info"
+else:
+    recommendation = "🛑 **REJECT VARIANT**: Negative impact detected"
+    next_steps = [
+        "Immediately stop test and revert to control",
+        "Conduct user research to understand failure",
+        "Analyze which user segments were most affected",
+        "Redesign approach based on learnings"
+    ]
+    recommendation_color = "error"
+
+# Render recommendation box
+if recommendation_color == "success":
+    st.success(recommendation)
+elif recommendation_color == "warning":
+    st.warning(recommendation)
+elif recommendation_color == "info":
+    st.info(recommendation)
+else:
+    st.error(recommendation)
+
+# Display next steps
+st.markdown("**Immediate Next Steps:**")
+for i, step in enumerate(next_steps, 1):
+    st.markdown(f"{i}. {step}")
+
 
 # --- Tab: ML Insights ---
 with tab_ml_insights:
