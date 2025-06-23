@@ -72,15 +72,12 @@ class DataQualityAssessment:
                             'severity': 'Medium'
                         })
                 except Exception:
-                    # Handle cases where column might not be convertible to datetime
                     pass
         
         # Check for impossible conversion rates (>100%)
         conversion_columns = [col for col in self.df.columns if 'conversion' in col.lower() or 'rate' in col.lower()]
         for col in conversion_columns:
             if col in self.df.columns and pd.api.types.is_numeric_dtype(self.df[col]):
-                # Check for rates > 1 (assuming 0-1 range) or > 100 (assuming 0-100% range)
-                # This logic assumes normalized rates are usually <=1.0, but some might be raw percentages.
                 impossible_rates = (self.df[col] > 1.0).sum() if self.df[col].max() <= 1.0 else (self.df[col] > 100).sum()
                 if impossible_rates > 0:
                     consistency_issues.append({
@@ -192,10 +189,10 @@ class EnterpriseDataCleaner:
             
             clean_name = clean_name.strip('_')
             
-            if col != clean_name: # Only add to mapping if changed
+            if col != clean_name:
                 name_mapping[col] = clean_name
         
-        if name_mapping: # Only rename if there are changes
+        if name_mapping:
             self.df = self.df.rename(columns=name_mapping)
             self.cleaning_log.append({
                 'step': 'Column name standardization',
@@ -215,7 +212,7 @@ class EnterpriseDataCleaner:
                 # Numeric columns
                 if pd.api.types.is_numeric_dtype(self.df[column]):
                     if 'revenue' in column or 'price' in column or 'amount' in column:
-                        self.df[column] = self.df[column].fillna(method='ffill').fillna(0) # Ffill then fill remaining with 0
+                        self.df[column] = self.df[column].fillna(method='ffill').fillna(0)
                     elif 'rate' in column or 'percentage' in column:
                         self.df[column] = self.df[column].fillna(self.df[column].median())
                     else:
@@ -288,11 +285,9 @@ class EnterpriseDataCleaner:
                     'professional': 'Pro', 'enterprise': 'Enterprise', 
                     'business': 'Enterprise', 'free': 'Free', 'trial': 'Free'
                 }
-                # Use .str.lower() for case-insensitivity
                 original_series = self.df[col].astype(str).str.lower()
                 self.df[col] = original_series.map(plan_mapping).fillna(self.df[col])
                 
-                # Count changes if any
                 if not original_series.equals(self.df[col].astype(str).str.lower()):
                     changes_made += 1
         
@@ -328,13 +323,11 @@ class EnterpriseDataCleaner:
         conversion_columns = [col for col in self.df.columns if 'conversion' in col.lower() or 'rate' in col.lower()]
         for col in conversion_columns:
             if col in self.df.columns and pd.api.types.is_numeric_dtype(self.df[col]) and not self.df[col].empty:
-                # Convert rates >1 to percentages (if it's a value like 15 for 15%)
-                percentage_mask = (self.df[col] > 1) & (self.df[col] <= 100) # Assuming max rate is 100%
+                percentage_mask = (self.df[col] > 1) & (self.df[col] <= 100)
                 if percentage_mask.any():
                     self.df.loc[percentage_mask, col] = self.df.loc[percentage_mask, col] / 100
                     violations_fixed += percentage_mask.sum()
                     
-                # Cap rates at 1.0 (100%) if still too high
                 high_rate_mask = self.df[col] > 1.0
                 if high_rate_mask.any():
                     self.df.loc[high_rate_mask, col] = 1.0
@@ -366,7 +359,7 @@ class EnterpriseDataCleaner:
             'original_shape': self.original_shape,
             'final_shape': final_shape,
             'rows_changed': self.original_shape[0] - final_shape[0],
-            'columns_changed': self.original_shape[1] - final_shape[1], # This might not be accurate if columns are added/removed dynamically
+            'columns_changed': self.original_shape[1] - final_shape[1],
             'cleaning_steps': self.cleaning_log,
             'data_quality_improvement': 'Significant improvement in data consistency and reliability'
         }
@@ -407,10 +400,10 @@ def create_messy_demo_dataset():
     
     # 3. Impossible conversion rates (>100% or very high, or negative)
     high_rate_indices = np.random.choice(df.index, size=15, replace=False)
-    df.loc[high_rate_indices, 'Conversion Rate'] = np.random.uniform(1.2, 2.5, 15) # >100%
+    df.loc[high_rate_indices, 'Conversion Rate'] = np.random.uniform(1.2, 2.5, 15)
     
     negative_rate_indices = np.random.choice(df.index, size=5, replace=False)
-    df.loc[negative_rate_indices, 'Conversion Rate'] = np.random.uniform(-0.1, -0.01, 5) # Negative rates
+    df.loc[negative_rate_indices, 'Conversion Rate'] = np.random.uniform(-0.1, -0.01, 5)
 
     # 4. Negative revenue values
     negative_rev_indices = np.random.choice(df.index, size=8, replace=False)
@@ -421,17 +414,16 @@ def create_messy_demo_dataset():
     df.loc[future_indices, 'Last Login'] = pd.to_datetime(pd.date_range(datetime.now() + timedelta(days=1), periods=12, freq='D'))
     
     # 6. Duplicate records
-    duplicate_rows = df.sample(5, replace=False).copy() # Ensure unique duplicates if possible
+    duplicate_rows = df.sample(5, replace=False).copy()
     df = pd.concat([df, duplicate_rows], ignore_index=True)
 
     # 7. Add some extreme outliers for numeric columns
-    df.loc[df.sample(2).index, 'Monthly Revenue'] = 50000 # Extreme high revenue
-    df.loc[df.sample(2).index, 'Conversion Rate'] = 0.001 # Extreme low conversion
+    df.loc[df.sample(2).index, 'Monthly Revenue'] = 50000
+    df.loc[df.sample(2).index, 'Conversion Rate'] = 0.001
     
     return df
 
 # --- Streamlit App Starts Here ---
-# (Existing code from your previous message)
 
 # --- Streamlit Page Configuration (MUST be the first Streamlit command) ---
 st.set_page_config(
@@ -568,7 +560,7 @@ def kpi_color(value, thresholds):
         return "🔴"
 
 # --- Dashboard Tabs (Main Content Area) ---
-tab_overview, tab_real_time, tab_funnel, tab_pricing, tab_ab_testing, tab_ml_insights, tab_geographic, tab_data_quality = st.tabs([ # Added new tab
+tab_overview, tab_real_time, tab_funnel, tab_pricing, tab_ab_testing, tab_ml_insights, tab_geographic, tab_data_quality = st.tabs([
     "📈 Overview",
     "📊 Real-Time Monitoring",
     "🔄 Funnel Analysis",
@@ -576,7 +568,7 @@ tab_overview, tab_real_time, tab_funnel, tab_pricing, tab_ab_testing, tab_ml_ins
     "🧪 A/B Testing",
     "🤖 ML Insights",
     "🌍 Geographic",
-    "🛠️ Data Quality" # New tab name
+    "🛠️ Data Quality"
 ])
 
 # --- Tab: Overview ---
@@ -1082,8 +1074,8 @@ with tab_pricing:
 
             st.markdown(f"""
             **Unit Economics Analysis:**
-            - **Best performing plan**: {best_plan} (LTV/CAC: {best_ratio_val:.1f}x if isinstance(best_ratio_val, (int, float)) else str(best_ratio_val)})
-            - **Needs improvement**: {worst_plan} (LTV/CAC: {worst_ratio_val:.1f}x if isinstance(worst_ratio_val, (int, float)) else str(worst_ratio_val)})
+            - **Best performing plan**: {best_plan} (LTV/CAC: {best_ratio_val:.1f}}x if isinstance(best_ratio_val, (int, float)) else str(best_ratio_val)})
+            - **Needs improvement**: {worst_plan} (LTV/CAC: {worst_ratio_val:.1f}}x if isinstance(worst_ratio_val, (int, float)) else str(worst_ratio_val)})
             - **Target**: LTV/CAC ratio should be >3x for healthy unit economics
             
             **Strategic Recommendations:**
@@ -1332,8 +1324,8 @@ with tab_pricing:
             5. **Customer Success Investment**: Reduce churn in high-value segments.
             
             **Key Performance Drivers:**
-            - Conversion rate optimization (especially for Enterprise: {enterprise_conversion_rate:.1f}% if isinstance(enterprise_conversion_rate, (int, float)) else str(enterprise_conversion_rate)} )
-            - Price elasticity management (Enterprise least elastic: {enterprise_elasticity:.1f} if isinstance(enterprise_elasticity, (int, float)) else str(enterprise_elasticity)} )
+            - Conversion rate optimization (especially for Enterprise: {enterprise_conversion_rate:.1f}}% if isinstance(enterprise_conversion_rate, (int, float)) else str(enterprise_conversion_rate)} )
+            - Price elasticity management (Enterprise least elastic: {enterprise_elasticity:.1f}} if isinstance(enterprise_elasticity, (int, float)) else str(enterprise_elasticity)} )
             - CAC efficiency improvements across all tiers.
             """)
 
@@ -1463,7 +1455,7 @@ with tab_ab_testing:
             **💼 Business Impact**
             - **Conversion Lift**: {lift_value:+.1f} percentage points
             - **Revenue Impact**: ${lift_value * 1000:+,.0f} monthly (estimated)
-            - **Confidence Interval**: [{variant_rate-2:.1f}%, {variant_rate+2:.1f}%]
+            - **Confidence Interval**: [{variant_rate-2:.1f}}%, {variant_rate+2:.1f}}%]
             - **Implementation Risk**: {'Low' if lift_value > 2 else 'Medium' if lift_value > 0 else 'High'}
             """)
         
@@ -1674,7 +1666,6 @@ with tab_ml_insights:
     with st.expander("🎯 ML-Driven Business Actions", expanded=True):
         st.markdown("### 🚨 High-Risk Customer Alert System")
         
-        # Simulate high-risk customers with realistic data
         high_risk_customers = pd.DataFrame({
             "Customer ID": ["CUST-001", "CUST-047", "CUST-092", "CUST-156", "CUST-203"],
             "Company": ["TechCorp Inc", "DataSoft LLC", "Analytics Pro", "StartupXYZ", "Enterprise Solutions"],
@@ -2202,7 +2193,6 @@ with tab_data_quality:
             
             st.markdown("*This showcases the analytical capabilities to detect various data quality issues.*")
             
-            # Offer to run cleaning pipeline on demo data
             if st.button("Run Cleaning Pipeline on Demo Data", key="run_demo_cleaning_btn"):
                 with st.spinner("Cleaning demo data..."):
                     cleaner = EnterpriseDataCleaner(messy_data)
@@ -2226,7 +2216,6 @@ with tab_data_quality:
                         st.metric("Rows", f"{cleaning_report_demo['original_shape'][0]:,}")
                         st.metric("Columns", cleaning_report_demo['original_shape'][1])
                     with col_demo_after:
-                        st.markdown("**After Cleaning:**")
                         st.metric("Rows", f"{cleaning_report_demo['final_shape'][0]:,}", f"{cleaning_report_demo['rows_changed']:+,}")
                         st.metric("Columns", cleaning_report_demo['final_shape'][1], f"{cleaning_report_demo['columns_changed']:+,}")
                     
@@ -2288,7 +2277,7 @@ with exec_summary_tab1:
         - **25 Enterprise trial extensions** with 60% conversion probability
         
         **Predictive Insights**
-        - Usage decline is strongest churn predictor (32% importance)
+        - Usage decline is strongest churn predictor (32%)
         - Support ticket volume correlation with churn risk (+85%)
         - Feature adoption score predicts LTV with 76% accuracy
         """)
