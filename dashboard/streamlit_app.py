@@ -2101,70 +2101,76 @@ with tab_data_quality:
                 else:
                     st.success("✅ No validity issues detected!")
             
-            with quality_tab4:
-                st.markdown("### 🧹 Automated Data Cleaning Pipeline")
-                
-                if st.button("Run Data Cleaning Pipeline", type="primary", key="run_cleaning_btn"):
-                    with st.spinner("Cleaning data..."):
-                        cleaner = EnterpriseDataCleaner(df_upload)
-                        
-                        cleaned_df = cleaner.standardize_column_names()
-                        cleaned_df = cleaner.handle_missing_values()
-                        cleaned_df = cleaner.standardize_categorical_values()
-                        cleaned_df = cleaner.validate_business_rules()
-                        cleaned_df = cleaner.remove_outliers()
-                        
-                        cleaning_report = cleaner.generate_cleaning_report()
-                        
-                        st.success("✅ Data cleaning completed!")
-                        
-                        col_before, col_after = st.columns(2)
-                        
-                        with col_before:
-                            st.markdown("**Before Cleaning:**")
-                            st.metric("Rows", f"{cleaning_report['original_shape'][0]:,}")
-                            st.metric("Columns", cleaning_report['original_shape'][1])
-                        
-                        with col_after:
-                            st.markdown("**After Cleaning:**")
-                            st.metric("Rows", f"{cleaning_report['final_shape'][0]:,}", 
-                                     f"{cleaning_report['rows_changed']:+,}")
-                            st.metric("Columns", cleaning_report['final_shape'][1],
-                                     f"{cleaning_report['columns_changed']:+,}")
-                        
-                        st.markdown("### 📋 Cleaning Steps Performed")
-                        for step in cleaning_report['cleaning_steps']:
-                            st.markdown(f"**{step['step']}**: {step['description']} ({step['changes']} changes)")
-                        
-                        csv_data = cleaned_df.to_csv(index=False).encode('utf-8')
-                        st.download_button(
-                            label="📥 Download Cleaned Dataset",
-                            data=csv_data,
-                            file_name=f"cleaned_{uploaded_file.name.replace('.csv', '').replace('.xlsx', '')}.csv",
-                            mime="text/csv",
-                            key="download_cleaned_data_btn"
-                        )
-                st.markdown("*This demonstrates the process of programmatically cleaning and validating messy datasets to ensure data reliability for critical business decisions.*")
+           with quality_tab4:
+    st.markdown("### 🧹 Automated Data Cleaning Pipeline")
+
+    if uploaded_file:
+        if st.button("Run Data Cleaning Pipeline", type="primary", key="run_cleaning_btn"):
+            with st.spinner("Cleaning data..."):
+                try:
+                    cleaner = EnterpriseDataCleaner(df_upload)
+
+                    cleaned_df = cleaner.standardize_column_names()
+                    cleaned_df = cleaner.handle_missing_values()
+                    cleaned_df = cleaner.standardize_categorical_values()
+                    cleaned_df = cleaner.validate_business_rules()
+                    cleaned_df = cleaner.remove_outliers()
+
+                    cleaning_report = cleaner.generate_cleaning_report()
+
+                    st.success("✅ Data cleaning completed!")
+
+                    col_before, col_after = st.columns(2)
+
+                    with col_before:
+                        st.markdown("**Before Cleaning:**")
+                        st.metric("Rows", f"{cleaning_report['original_shape'][0]:,}")
+                        st.metric("Columns", cleaning_report['original_shape'][1])
+
+                    with col_after:
+                        st.markdown("**After Cleaning:**")
+                        st.metric("Rows", f"{cleaning_report['final_shape'][0]:,}",
+                                  f"{cleaning_report['rows_changed']:+,}")
+                        st.metric("Columns", cleaning_report['final_shape'][1],
+                                  f"{cleaning_report['columns_changed']:+,}")
+
+                    st.markdown("### 📋 Cleaning Steps Performed")
+                    for step in cleaning_report['cleaning_steps']:
+                        st.markdown(f"**{step['step']}**: {step['description']} ({step['changes']} changes)")
+
+                    csv_data = cleaned_df.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label="📥 Download Cleaned Dataset",
+                        data=csv_data,
+                        file_name=f"cleaned_{uploaded_file.name.replace('.csv', '').replace('.xlsx', '')}.csv",
+                        mime="text/csv",
+                        key="download_cleaned_data_btn"
+                    )
+                except Exception as e:
+                    st.error(f"An error occurred during cleaning: {e}")
+
+        st.markdown("*This demonstrates the process of programmatically cleaning and validating messy datasets to ensure data reliability for critical business decisions.*")
+
     else:
         st.markdown("### 🎲 Demo: Data Quality Assessment with Messy Data")
         st.info("Upload your own dataset above, or click the button below to explore a demo with intentionally messy synthetic data.")
-        
+
         if st.button("Generate Messy Demo Dataset", key="generate_messy_demo_btn"):
             messy_data = create_messy_demo_dataset()
-            
+
             st.markdown("**Generated messy dataset with common real-world issues (first 10 rows):**")
             st.dataframe(messy_data.head(10), use_container_width=True)
-            
+
             quality_assessor = DataQualityAssessment(messy_data, "Demo Dataset")
             quality_report = quality_assessor.generate_quality_report()
-            
+
             col_demo_score, col_demo_issues = st.columns(2)
-            
+
             with col_demo_score:
                 score = quality_report['overall_score']
                 score_color_emoji = "🔴"
                 st.metric("Demo Quality Score", f"{score_color_emoji} {score}/100")
-            
+
             with col_demo_issues:
                 st.markdown(f"""
                 **Issues Detected:**
@@ -2172,9 +2178,9 @@ with tab_data_quality:
                 - Validity Issues: {len(quality_report['validity'])}
                 - Missing Values: {sum(v['missing_count'] for v in quality_report['completeness'].values())}
                 """)
-            
+
             st.markdown("*This showcases the analytical capabilities to detect various data quality issues.*")
-            
+
             if st.button("Run Cleaning Pipeline on Demo Data", key="run_demo_cleaning_btn"):
                 with st.spinner("Cleaning demo data..."):
                     cleaner = EnterpriseDataCleaner(messy_data)
@@ -2183,28 +2189,32 @@ with tab_data_quality:
                     cleaned_demo_df = cleaner.standardize_categorical_values()
                     cleaned_demo_df = cleaner.validate_business_rules()
                     cleaned_demo_df = cleaner.remove_outliers()
-                    
+
                     cleaning_report_demo = cleaner.generate_cleaning_report()
-                    
+
                     st.success("✅ Demo data cleaning completed!")
-                    
+
                     st.markdown("**Cleaned Demo Dataset (first 10 rows):**")
                     st.dataframe(cleaned_demo_df.head(10), use_container_width=True)
-                    
+
                     st.markdown("#### Cleaning Report for Demo Data")
                     col_demo_before, col_demo_after = st.columns(2)
+
                     with col_demo_before:
                         st.markdown("**Before Cleaning:**")
                         st.metric("Rows", f"{cleaning_report_demo['original_shape'][0]:,}")
                         st.metric("Columns", cleaning_report_demo['original_shape'][1])
+
                     with col_demo_after:
-                        st.metric("Rows", f"{cleaning_report_demo['final_shape'][0]:,}", f"{cleaning_report_demo['rows_changed']:+,}")
-                        st.metric("Columns", cleaning_report_demo['final_shape'][1], f"{cleaning_report_demo['columns_changed']:+,}")
-                    
+                        st.metric("Rows", f"{cleaning_report_demo['final_shape'][0]:,}",
+                                  f"{cleaning_report_demo['rows_changed']:+,}")
+                        st.metric("Columns", cleaning_report_demo['final_shape'][1],
+                                  f"{cleaning_report_demo['columns_changed']:+,}")
+
                     st.markdown("### 📋 Cleaning Steps Performed on Demo Data")
                     for step in cleaning_report_demo['cleaning_steps']:
                         st.markdown(f"**{step['step']}**: {step['description']} ({step['changes']} changes)")
-                    
+
                     csv_data_demo = cleaned_demo_df.to_csv(index=False).encode('utf-8')
                     st.download_button(
                         label="📥 Download Cleaned Demo Dataset",
@@ -2215,7 +2225,7 @@ with tab_data_quality:
                     )
 
 
-# === COMPREHENSIVE EXECUTIVE SUMMARY SECTION ===
+# === EXECUTIVE SUMMARY SECTION ===
 st.markdown("---")
 st.markdown("## 📋 Executive Summary & Strategic Action Plan")
 
