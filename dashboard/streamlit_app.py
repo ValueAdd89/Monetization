@@ -548,6 +548,7 @@ with tab_overview:
 
 
 # --- Tab: Funnel Analysis ---
+# --- Tab: Funnel Analysis ---
 with tab_funnel:
     st.header("🔄 Funnel Analysis")
     st.markdown("Analyze user journey drop-offs and conversion rates at each stage.")
@@ -555,68 +556,55 @@ with tab_funnel:
     st.markdown("#### Funnel Filters")
     with st.container(border=True):
         col_f1, col_f2, col_f3, col_f4 = st.columns(4)
+
+        # ✅ Get options from full dataset (not globally filtered) to avoid empty dropdowns
         with col_f1:
-            # Populate options from the globally filtered funnel data
-            plan_options = ["All"] + sorted(funnel_df_globally_filtered['plan'].dropna().unique().tolist()) if 'plan' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['plan'].empty else ["All"]
+            plan_options = ["All"] + sorted(funnel_df_main['plan'].dropna().unique().tolist()) if 'plan' in funnel_df_main.columns else ["All"]
             funnel_plan = st.selectbox("Plan", plan_options, key="funnel_plan")
+
         with col_f2:
-            # Populate options from the globally filtered funnel data
-            region_options = ["All"] + sorted(funnel_df_globally_filtered['region'].dropna().unique().tolist()) if 'region' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['region'].empty else ["All"]
+            region_options = ["All"] + sorted(funnel_df_main['region'].dropna().unique().tolist()) if 'region' in funnel_df_main.columns else ["All"]
             funnel_region = st.selectbox("Region", region_options, key="funnel_region")
+
         with col_f3:
-            # Populate options from the globally filtered funnel data
-            segment_options_funnel = ["All"] + sorted(funnel_df_globally_filtered['customer_segment'].dropna().unique().tolist()) if 'customer_segment' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['customer_segment'].empty else ["All"]
+            segment_options_funnel = ["All"] + sorted(funnel_df_main['customer_segment'].dropna().unique().tolist()) if 'customer_segment' in funnel_df_main.columns else ["All"]
             funnel_segment = st.selectbox("Customer Segment", segment_options_funnel, key="funnel_segment")
-        with col_f4: # Year slider moved to after dropdowns
-            # Safely determine min/max year for the funnel slider
-            if 'year' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['year'].empty:
-                min_year_funnel = int(funnel_df_globally_filtered['year'].min())
-                max_year_funnel = int(funnel_df_globally_filtered['year'].max())
-                # Ensure the default value is within the valid range
+
+        with col_f4:
+            if 'year' in funnel_df_main.columns:
+                min_year_funnel = int(funnel_df_main['year'].min())
+                max_year_funnel = int(funnel_df_main['year'].max())
                 default_year_funnel = max(min_year_funnel, min(max_year_funnel, selected_year_global))
             else:
-                # Fallback if no year data is present after global filtering
                 min_year_funnel = 2021
                 max_year_funnel = 2024
-                default_year_funnel = selected_year_global # Use global default
-
+                default_year_funnel = selected_year_global
             funnel_year = st.slider("Year", min_year_funnel, max_year_funnel, default_year_funnel, key="funnel_year")
 
-
-    # Apply funnel-specific filters on top of the already globally filtered funnel data
+    # ✅ Apply funnel-level filters on top of globally filtered funnel data
     funnel_df_filtered = funnel_df_globally_filtered.copy()
 
-    # Ensure columns exist and the selected value is not "All" before filtering
     if 'plan' in funnel_df_filtered.columns and funnel_plan != "All":
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["plan"] == funnel_plan]
     if 'region' in funnel_df_filtered.columns and funnel_region != "All":
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["region"] == funnel_region]
-    if 'year' in funnel_df_filtered.columns: # Year filter is always applied if column exists
+    if 'year' in funnel_df_filtered.columns:
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["year"] == funnel_year]
     if 'customer_segment' in funnel_df_filtered.columns and funnel_segment != "All":
         funnel_df_filtered = funnel_df_filtered[funnel_df_filtered["customer_segment"] == funnel_segment]
 
-
     st.markdown("#### User Journey Funnel Drop-Off")
     with st.container(border=True):
         if not funnel_df_filtered.empty:
-            if 'step' in funnel_df_filtered.columns and 'count' in funnel_df_filtered.columns:
-                funnel_aggregated = funnel_df_filtered.groupby(['step', 'step_order']).agg({'count': 'sum'}).reset_index()
-                if 'step_order' in funnel_aggregated.columns:
-                    funnel_df_sorted = funnel_aggregated.sort_values(by="step_order", ascending=True)
-                else:
-                    st.warning("Column 'step_order' not found in funnel data, chart may not be sorted correctly.")
-                    funnel_df_sorted = funnel_aggregated
-
-                fig_funnel = px.funnel(
-                    funnel_df_sorted,
-                    x="count",
-                    y="step",
-                    title="User Journey Funnel Drop-Off"
-                )
-                st.plotly_chart(fig_funnel, use_container_width=True)
-            else:
-                st.info("Required columns 'step' or 'count' not found in filtered funnel data for chart.")
+            funnel_aggregated = funnel_df_filtered.groupby(['step', 'step_order']).agg({'count': 'sum'}).reset_index()
+            funnel_df_sorted = funnel_aggregated.sort_values(by="step_order", ascending=True)
+            fig_funnel = px.funnel(
+                funnel_df_sorted,
+                x="count",
+                y="step",
+                title="User Journey Funnel Drop-Off"
+            )
+            st.plotly_chart(fig_funnel, use_container_width=True)
         else:
             st.info("Funnel data is not available for the selected filters.")
 
@@ -624,21 +612,18 @@ with tab_funnel:
         st.markdown("#### Conversion Rates Between Steps")
         with st.container(border=True):
             funnel_conversion = funnel_df_filtered.groupby(['step', 'step_order']).agg({'count': 'sum'}).reset_index().sort_values('step_order')
-            
+
             if len(funnel_conversion) > 1:
                 conversion_rates = []
                 for i in range(1, len(funnel_conversion)):
                     current_count = funnel_conversion.iloc[i]['count']
-                    previous_count = funnel_conversion.iloc[i-1]['count']
-                    if previous_count > 0:
-                        conversion_rate = (current_count / previous_count) * 100
-                    else:
-                        conversion_rate = 0
+                    previous_count = funnel_conversion.iloc[i - 1]['count']
+                    conversion_rate = (current_count / previous_count) * 100 if previous_count > 0 else 0
                     conversion_rates.append({
-                        'From': funnel_conversion.iloc[i-1]['step'],
+                        'From': funnel_conversion.iloc[i - 1]['step'],
                         'To': funnel_conversion.iloc[i]['step'],
                         'Conversion Rate': f"{conversion_rate:.1f}%",
-                        'Drop-off Rate': f"{100-conversion_rate:.1f}%"
+                        'Drop-off Rate': f"{100 - conversion_rate:.1f}%"
                     })
                 conversion_df = pd.DataFrame(conversion_rates)
                 st.dataframe(conversion_df, use_container_width=True)
