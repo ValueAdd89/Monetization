@@ -1312,25 +1312,31 @@ with tab_pricing:
                 enterprise_conversion_rate = "N/A"
                 enterprise_elasticity = "N/A"
             
+            # Pre-format values safely
+            enterprise_conversion_display = f"{enterprise_conversion_rate:.1f}%" if isinstance(enterprise_conversion_rate, (int, float)) else str(enterprise_conversion_rate)
+            enterprise_elasticity_display = f"{enterprise_elasticity:.1f}" if isinstance(enterprise_elasticity, (int, float)) else str(enterprise_elasticity)
+            
+            # Now plug into f-string
             st.markdown(f"""
             **Profitability Analysis:**
-            - **Highest Revenue Generator**: {highest_revenue_plan} plan
-            - **Best Gross Margins**: {highest_margin_plan} plan
-            - **Best Unit Economics (LTV/CAC)**: {best_ltv_cac_plan} plan
+            - **Highest Revenue Generator**: {highest_revenue_plan} plan  
+            - **Best Gross Margins**: {highest_margin_plan} plan  
+            - **Best Unit Economics (LTV/CAC)**: {best_ltv_cac_plan} plan  
             - **Enterprise Revenue Share**: {enterprise_share:.1f}% of total revenue
             
             **Strategic Recommendations:**
-            1. **Focus on Enterprise Growth**: Higher margins and better unit economics.
-            2. **Optimize {worst_ltv_cac_plan} Plan**: Lowest LTV/CAC ratio needs improvement.
-            3. **Upselling Strategy**: Move customers from Basic → Pro → Enterprise.
-            4. **Margin Optimization**: Focus on plans with <80% gross margin.
+            1. **Focus on Enterprise Growth**: Higher margins and better unit economics.  
+            2. **Optimize {worst_ltv_cac_plan} Plan**: Lowest LTV/CAC ratio needs improvement.  
+            3. **Upselling Strategy**: Move customers from Basic → Pro → Enterprise.  
+            4. **Margin Optimization**: Focus on plans with <80% gross margin.  
             5. **Customer Success Investment**: Reduce churn in high-value segments.
             
             **Key Performance Drivers:**
-            - Conversion rate optimization (especially for Enterprise: {enterprise_conversion_rate:.1f}}% if isinstance(enterprise_conversion_rate, (int, float)) else str(enterprise_conversion_rate)} )
-            - Price elasticity management (Enterprise least elastic: {enterprise_elasticity:.1f}} if isinstance(enterprise_elasticity, (int, float)) else str(enterprise_elasticity)} )
+            - Conversion rate optimization (especially for Enterprise: {enterprise_conversion_display})  
+            - Price elasticity management (Enterprise least elastic: {enterprise_elasticity_display})  
             - CAC efficiency improvements across all tiers.
             """)
+
 
 
 # --- Tab: A/B Testing ---
