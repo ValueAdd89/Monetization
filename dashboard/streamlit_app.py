@@ -35,16 +35,13 @@ class DataQualityAssessment:
 
             clean_name = clean_name.strip('_')
 
-            if col != clean_name:
-                name_mapping[col] = clean_name
-
-        if name_mapping:
-            self.df = self.df.rename(columns=name_mapping)
-            self.cleaning_log.append({
-                'step': 'Column name standardization',
-                'changes': len(name_mapping),
-                'description': f'Converted {len(name_mapping)} column names to snake_case'
-            })
+            if name_mapping:
+                self.df = self.df.rename(columns=name_mapping)
+                self.cleaning_log.append({
+                    'step': 'Column name standardization',
+                    'changes': len(name_mapping),
+                    'description': f'Converted {len(name_mapping)} column names to snake_case'
+                })
         return self.df
 
     def handle_missing_values(self, strategy='intelligent'):
@@ -120,7 +117,7 @@ class DataQualityAssessment:
         for col in plan_columns:
             if col in self.df.columns and not self.df[col].empty:
                 plan_mapping = {
-                    'basic': 'Basic', 'starter': 'Basic', 'pro': 'Pro',
+                    'basic': 'Basic', 'PRO': 'Pro', 'pro': 'Pro',
                     'professional': 'Pro', 'enterprise': 'Enterprise',
                     'business': 'Enterprise', 'free': 'Free', 'trial': 'Free'
                 }
@@ -571,10 +568,19 @@ with tab_funnel:
             segment_options_funnel = ["All"] + sorted(funnel_df_globally_filtered['customer_segment'].dropna().unique().tolist()) if 'customer_segment' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['customer_segment'].empty else ["All"]
             funnel_segment = st.selectbox("Customer Segment", segment_options_funnel, key="funnel_segment")
         with col_f4: # Year slider moved to after dropdowns
-            # Use global year for funnel tab, as it's already filtered globally
-            # If you want a separate year filter for funnel, make sure to get min/max from funnel_df_globally_filtered
-            # For consistency with global filters, we'll keep this aligned with selected_year_global initially
-            funnel_year = st.slider("Year", selected_year_global, selected_year_global, selected_year_global, key="funnel_year")
+            # Safely determine min/max year for the funnel slider
+            if 'year' in funnel_df_globally_filtered.columns and not funnel_df_globally_filtered['year'].empty:
+                min_year_funnel = int(funnel_df_globally_filtered['year'].min())
+                max_year_funnel = int(funnel_df_globally_filtered['year'].max())
+                # Ensure the default value is within the valid range
+                default_year_funnel = max(min_year_funnel, min(max_year_funnel, selected_year_global))
+            else:
+                # Fallback if no year data is present after global filtering
+                min_year_funnel = 2021
+                max_year_funnel = 2024
+                default_year_funnel = selected_year_global # Use global default
+
+            funnel_year = st.slider("Year", min_year_funnel, max_year_funnel, default_year_funnel, key="funnel_year")
 
 
     # Apply funnel-specific filters on top of the already globally filtered funnel data
